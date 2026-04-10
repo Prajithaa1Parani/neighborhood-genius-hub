@@ -11,12 +11,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
+  const [user, setUser] = useState<User | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("exchange_auth") ? currentUser : null;
+      const stored = localStorage.getItem("exchange_auth");
+      if (stored) setUser(currentUser);
+      setHydrated(true);
     }
-    return null;
-  });
+  }, []);
 
   const login = useCallback((email: string, password: string) => {
     if (email === DEMO_CREDENTIALS.email && password === DEMO_CREDENTIALS.password) {
