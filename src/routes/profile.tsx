@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { reviews } from "@/lib/mock-data";
 import { AppHeader, BottomNav } from "@/components/AppLayout";
@@ -18,10 +19,13 @@ function ProfilePage() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
-  if (!isAuthenticated || !user) {
-    navigate({ to: "/login" });
-    return null;
-  }
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      navigate({ to: "/login" });
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  if (!isAuthenticated || !user) return null;
 
   const handleLogout = () => {
     logout();

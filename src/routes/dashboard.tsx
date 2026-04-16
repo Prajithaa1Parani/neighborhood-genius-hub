@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { activeExchanges, allSkills } from "@/lib/mock-data";
 import { ArrowUpRight, Clock, Star, Plus, ChevronRight } from "lucide-react";
@@ -18,10 +19,13 @@ function DashboardPage() {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  if (!isAuthenticated || !user) {
-    navigate({ to: "/login" });
-    return null;
-  }
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      navigate({ to: "/login" });
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  if (!isAuthenticated || !user) return null;
 
   const recommendedSkills = allSkills.slice(0, 3);
 
