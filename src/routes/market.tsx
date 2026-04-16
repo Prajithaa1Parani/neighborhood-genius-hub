@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { allSkills, categories } from "@/lib/mock-data";
 import { AppHeader, BottomNav } from "@/components/AppLayout";
@@ -21,10 +21,13 @@ function MarketPage() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All Skills");
 
-  if (!isAuthenticated) {
-    navigate({ to: "/login" });
-    return null;
-  }
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate({ to: "/login" });
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (!isAuthenticated) return null;
 
   const filtered = allSkills.filter(s => {
     const matchesSearch = s.title.toLowerCase().includes(search.toLowerCase()) || s.tags.some(t => t.toLowerCase().includes(search.toLowerCase()));

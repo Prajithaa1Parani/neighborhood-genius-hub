@@ -96,10 +96,13 @@ function ChatPage() {
     if (selectedConvo) scrollToBottom();
   }, [messages, selectedConvo, scrollToBottom]);
 
-  if (!isAuthenticated) {
-    navigate({ to: "/login" });
-    return null;
-  }
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate({ to: "/login" });
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (!isAuthenticated) return null;
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConvo || isTyping) return;
