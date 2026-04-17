@@ -74,7 +74,7 @@ function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarHeader className="border-b border-border">
-        <Link to="/dashboard" className="flex items-center gap-2 px-2 py-2">
+        <Link to="/" className="flex items-center gap-2 px-2 py-2" title="Back to home">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-navy text-navy-foreground">
             <Code2 className="h-4 w-4" />
           </div>

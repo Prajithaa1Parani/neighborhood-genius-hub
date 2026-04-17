@@ -77,7 +77,10 @@ function AuthPage() {
       </div>
 
       {/* Right form panel */}
-      <div className="flex items-center justify-center bg-background px-4 py-10">
+      <div className="relative flex items-center justify-center bg-background px-4 py-10">
+        <Link to="/" className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+          <ArrowLeft className="h-3.5 w-3.5" /> Back to home
+        </Link>
         <div className="w-full max-w-md">
           <div className="mb-6 lg:hidden">
             <Link to="/" className="inline-flex items-center gap-2">

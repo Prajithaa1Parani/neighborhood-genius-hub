@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion, useInView, useMotionValue, useSpring, useTransform, animate } from "framer-motion";
+import { motion, useInView, useMotionValue, useSpring, useTransform, animate, useScroll } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
   Code2, Sparkles, MessageSquare, ShieldCheck, ArrowRight, Star, Zap, Network,
   GitBranch, Cpu, Layers, Terminal, CheckCircle2, Github, Twitter, Linkedin,
+  ChevronDown, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
@@ -28,6 +29,22 @@ const fadeUp = {
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } };
 
 const LOGOS = ["STRIPE", "VERCEL", "OPENAI", "DATABRICKS", "FIGMA", "NETFLIX", "AIRBNB", "DATADOG", "LINEAR", "NOTION"];
+const SKILL_CHIPS = [
+  "System Design", "Kubernetes", "ML Ops", "Rust", "Distributed Systems", "PyTorch",
+  "GraphQL", "Postgres tuning", "Compilers", "WebAssembly", "Kafka", "CRDTs",
+  "Zero-trust security", "gRPC", "Observability", "Edge computing", "Vector DBs",
+];
+
+function LiveTicker() {
+  const [n, setN] = useState(847);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setN((v) => Math.max(820, Math.min(910, v + Math.floor(Math.random() * 7) - 3)));
+    }, 2200);
+    return () => clearInterval(id);
+  }, []);
+  return <span className="tabular-nums">{n}</span>;
+}
 
 function CountUp({ to, suffix = "", duration = 1.6 }: { to: number; suffix?: string; duration?: number }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -80,6 +97,7 @@ function TypingCode() {
 function LandingPage() {
   const { isAuthenticated } = useAuth();
   const heroRef = useRef<HTMLDivElement>(null);
+  const tiltRef = useRef<HTMLDivElement>(null);
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
   const sx = useSpring(mx, { stiffness: 60, damping: 20 });
@@ -89,11 +107,31 @@ function LandingPage() {
   const orb2X = useTransform(sx, (v) => v * -45);
   const orb2Y = useTransform(sy, (v) => v * -25);
 
+  const { scrollY } = useScroll();
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => scrollY.on("change", (v) => setScrolled(v > 24)), [scrollY]);
+
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       const w = window.innerWidth, h = window.innerHeight;
       mx.set((e.clientX - w / 2) / (w / 2));
       my.set((e.clientY - h / 2) / (h / 2));
+      // spotlight position on hero
+      if (heroRef.current) {
+        const r = heroRef.current.getBoundingClientRect();
+        heroRef.current.style.setProperty("--mx", `${e.clientX - r.left}px`);
+        heroRef.current.style.setProperty("--my", `${e.clientY - r.top}px`);
+      }
+      // tilt card
+      if (tiltRef.current) {
+        const r = tiltRef.current.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        const rx = ((e.clientY - cy) / r.height) * -8;
+        const ry = ((e.clientX - cx) / r.width) * 10;
+        tiltRef.current.style.setProperty("--rx", `${rx}deg`);
+        tiltRef.current.style.setProperty("--ry", `${ry}deg`);
+      }
     };
     window.addEventListener("mousemove", onMove);
     return () => window.removeEventListener("mousemove", onMove);
@@ -114,8 +152,8 @@ function LandingPage() {
         <div className="absolute inset-0 noise" />
       </div>
 
-      {/* Nav */}
-      <nav className="relative z-30">
+      {/* Sticky nav */}
+      <nav className={`sticky top-0 z-30 transition-all duration-300 ${scrolled ? "bg-[#050813]/75 backdrop-blur-xl border-b border-white/10" : "bg-transparent"}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link to="/" className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30">
@@ -153,14 +191,15 @@ function LandingPage() {
 
       {/* Hero */}
       <section ref={heroRef} className="relative z-10 mx-auto max-w-7xl px-6 pt-12 pb-24 md:pt-20 md:pb-28">
-        <div className="grid items-center gap-10 lg:grid-cols-12">
+        <div className="pointer-events-none absolute inset-0 spotlight" />
+        <div className="relative grid items-center gap-10 lg:grid-cols-12">
           <motion.div initial="hidden" animate="visible" variants={stagger} className="lg:col-span-7">
             <motion.div variants={fadeUp} className="mb-6 inline-flex items-center gap-2 rounded-full glass px-3.5 py-1.5 text-xs font-medium text-white/85">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-pulse-ring" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
               </span>
-              847 engineers online · 24 cities
+              <LiveTicker /> engineers online · 24 cities
             </motion.div>
 
             <h1 className="text-balance text-5xl font-semibold tracking-tight md:text-7xl">
@@ -210,10 +249,10 @@ function LandingPage() {
             </motion.p>
           </motion.div>
 
-          {/* Floating preview card */}
+          {/* Floating preview card with 3D tilt */}
           <motion.div
-            initial={{ opacity: 0, y: 40, rotate: -3 }}
-            animate={{ opacity: 1, y: 0, rotate: -3 }}
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="relative hidden lg:col-span-5 lg:block"
           >
@@ -222,36 +261,59 @@ function LandingPage() {
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
               className="relative mx-auto max-w-md"
             >
-              <div className="absolute -inset-1 rounded-3xl bg-gradient-to-br from-blue-500/40 via-fuchsia-500/30 to-cyan-400/40 blur-xl" />
-              <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-[#0a0f1f]/90 p-6 shadow-2xl backdrop-blur-xl">
-                <div className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[10px] font-medium text-emerald-300 ring-1 ring-emerald-400/30">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> NEW MATCH
-                  </span>
-                  <span className="text-[10px] uppercase tracking-widest text-white/40">98% fit</span>
-                </div>
-                <div className="mt-5 flex items-center gap-3">
-                  <img src={AVATARS.arjun} alt="Arjun Mehta" className="h-12 w-12 rounded-full object-cover ring-2 ring-white/10" />
-                  <div>
-                    <p className="text-sm font-semibold text-white">Arjun Mehta</p>
-                    <p className="text-xs text-white/50">Staff Engineer · Distributed Systems</p>
+              <div ref={tiltRef} className="tilt-card relative">
+                <div className="absolute -inset-1 rounded-3xl bg-gradient-to-br from-blue-500/40 via-fuchsia-500/30 to-cyan-400/40 blur-xl" />
+                <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-[#0a0f1f]/90 p-6 shadow-2xl backdrop-blur-xl">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[10px] font-medium text-emerald-300 ring-1 ring-emerald-400/30">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> NEW MATCH
+                    </span>
+                    <span className="text-[10px] uppercase tracking-widest text-white/40">98% fit</span>
                   </div>
-                </div>
-                <p className="mt-4 text-xs text-white/60">Offers <span className="text-white/90">System Design</span> in exchange for <span className="text-white/90">PyTorch fundamentals</span>.</p>
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {["System Design", "Go", "Kafka", "K8s"].map((t) => (
-                    <span key={t} className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] text-white/70 ring-1 ring-white/10">{t}</span>
-                  ))}
-                </div>
-                <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-4">
-                  <div className="flex items-center gap-1 text-xs text-amber-300">
-                    <Star className="h-3 w-3 fill-current" /> 4.92 · 87 reviews
+                  <div className="mt-5 flex items-center gap-3">
+                    <img src={AVATARS.arjun} alt="Arjun Mehta" className="h-12 w-12 rounded-full object-cover ring-2 ring-white/10" />
+                    <div>
+                      <p className="text-sm font-semibold text-white">Arjun Mehta</p>
+                      <p className="text-xs text-white/50">Staff Engineer · Distributed Systems</p>
+                    </div>
                   </div>
-                  <Button size="sm" className="h-7 bg-white text-[11px] text-slate-900 hover:bg-white/90">Request →</Button>
+                  <p className="mt-4 text-xs text-white/60">Offers <span className="text-white/90">System Design</span> in exchange for <span className="text-white/90">PyTorch fundamentals</span>.</p>
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {["System Design", "Go", "Kafka", "K8s"].map((t) => (
+                      <span key={t} className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] text-white/70 ring-1 ring-white/10">{t}</span>
+                    ))}
+                  </div>
+                  <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-4">
+                    <div className="flex items-center gap-1 text-xs text-amber-300">
+                      <Star className="h-3 w-3 fill-current" /> 4.92 · 87 reviews
+                    </div>
+                    <Button size="sm" className="h-7 bg-white text-[11px] text-slate-900 hover:bg-white/90">Request →</Button>
+                  </div>
                 </div>
               </div>
             </motion.div>
           </motion.div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div className="mt-16 hidden justify-center md:flex">
+          <div className="flex flex-col items-center gap-1 text-[10px] uppercase tracking-[0.25em] text-white/40">
+            <span>Scroll</span>
+            <ChevronDown className="h-4 w-4 animate-scroll-bounce" />
+          </div>
+        </div>
+      </section>
+
+      {/* Skills in motion — reverse marquee */}
+      <section className="relative z-10 border-y border-white/5 bg-white/[0.01] py-10 marquee-pause">
+        <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+          <div className="marquee-track-reverse flex w-max gap-3 whitespace-nowrap px-4">
+            {[...SKILL_CHIPS, ...SKILL_CHIPS].map((s, i) => (
+              <span key={i} className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/75 backdrop-blur transition-colors hover:border-blue-400/40 hover:text-white">
+                {s}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -485,6 +547,53 @@ function LandingPage() {
         </motion.div>
       </section>
 
+      {/* Meet the engineers */}
+      <section id="engineers" className="relative z-10 mx-auto max-w-7xl px-6 pb-24">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mx-auto max-w-2xl text-center">
+          <motion.p variants={fadeUp} className="text-[11px] uppercase tracking-[0.2em] text-blue-300/80">The Network</motion.p>
+          <motion.h2 variants={fadeUp} className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">Meet a few of the engineers.</motion.h2>
+          <motion.p variants={fadeUp} className="mt-4 text-white/60">Verified profiles. Real shipped work. People you'd actually want in your standup.</motion.p>
+        </motion.div>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { name: "Arjun Mehta", role: "Staff Engineer", avatar: AVATARS.arjun, tags: ["System Design", "Go", "Kafka"] },
+            { name: "Priya Sharma", role: "ML Engineer", avatar: AVATARS.priya, tags: ["PyTorch", "MLOps", "RAG"] },
+            { name: "David Kim", role: "Frontend Lead", avatar: AVATARS.david, tags: ["React", "Edge", "TS"] },
+            { name: "Sarah Chen", role: "Infra Architect", avatar: AVATARS.sarah, tags: ["K8s", "Terraform", "AWS"] },
+            { name: "Rohan Desai", role: "DevOps Architect", avatar: AVATARS.rohan, tags: ["CI/CD", "Observability"] },
+            { name: "Liam O'Brien", role: "Security Engineer", avatar: AVATARS.liam, tags: ["AppSec", "Zero-trust"] },
+            { name: "Aisha Khan", role: "Backend Engineer", avatar: AVATARS.aisha, tags: ["Rust", "Postgres", "gRPC"] },
+            { name: "Julian Rossi", role: "Compiler Engineer", avatar: AVATARS.julian, tags: ["LLVM", "WASM"] },
+          ].map((p) => (
+            <motion.div
+              key={p.name}
+              variants={fadeUp}
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.06] hover:shadow-2xl hover:shadow-blue-500/10"
+            >
+              <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-blue-500/30 to-fuchsia-500/20 blur-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <div className="relative flex items-center gap-3">
+                <img src={p.avatar} alt={p.name} className="h-14 w-14 rounded-full object-cover ring-2 ring-white/10" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-white">{p.name}</p>
+                  <p className="truncate text-xs text-white/55">{p.role}</p>
+                </div>
+              </div>
+              <div className="relative mt-4 flex flex-wrap gap-1.5">
+                {p.tags.map((t) => (
+                  <span key={t} className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] text-white/65 ring-1 ring-white/10">{t}</span>
+                ))}
+              </div>
+              <div className="relative mt-5 flex items-center justify-between">
+                <div className="flex items-center gap-1 text-[11px] text-amber-300">
+                  <Star className="h-3 w-3 fill-current" /> 4.9
+                </div>
+                <span className="text-[11px] font-medium text-blue-300 opacity-0 transition-opacity group-hover:opacity-100">View profile →</span>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
       {/* Testimonials */}
       <section id="testimonials" className="relative z-10 mx-auto max-w-7xl px-6 pb-24">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mx-auto max-w-2xl text-center">
@@ -514,32 +623,92 @@ function LandingPage() {
         </motion.div>
       </section>
 
+      {/* Pricing teaser */}
+      <section id="pricing" className="relative z-10 mx-auto max-w-7xl px-6 pb-24">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mx-auto max-w-2xl text-center">
+          <motion.p variants={fadeUp} className="text-[11px] uppercase tracking-[0.2em] text-blue-300/80">Pricing</motion.p>
+          <motion.h2 variants={fadeUp} className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">Simple plans. Outsized leverage.</motion.h2>
+          <motion.p variants={fadeUp} className="mt-4 text-white/60">Start free. Upgrade when you want priority matching and team features.</motion.p>
+        </motion.div>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mt-14 grid gap-5 md:grid-cols-3">
+          {[
+            { name: "Free", price: "0", per: "forever", desc: "Everything you need to start trading skills.", popular: false,
+              features: ["1 active exchange", "Public profile", "AI-assisted chat (limited)", "Community support"] },
+            { name: "Pro", price: "19", per: "per month", desc: "For engineers serious about leveling up fast.", popular: true,
+              features: ["Unlimited exchanges", "Priority matching", "Unlimited AI chat", "Verified badge", "Calendar sync"] },
+            { name: "Team", price: "49", per: "per seat / mo", desc: "For engineering orgs investing in growth.", popular: false,
+              features: ["Everything in Pro", "Team analytics dashboard", "SSO + SAML", "Dedicated success manager", "Custom skill taxonomy"] },
+          ].map((p) => (
+            <motion.div
+              key={p.name}
+              variants={fadeUp}
+              className={`relative overflow-hidden rounded-2xl border p-7 transition-all duration-300 hover:-translate-y-1 ${
+                p.popular
+                  ? "border-blue-400/40 bg-gradient-to-b from-blue-500/10 to-fuchsia-500/5 shadow-2xl shadow-blue-500/20"
+                  : "border-white/10 bg-white/[0.03] hover:border-white/20"
+              }`}
+            >
+              {p.popular && (
+                <div className="absolute right-5 top-5 rounded-full bg-gradient-to-r from-blue-500 to-fuchsia-500 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg">
+                  Most popular
+                </div>
+              )}
+              <p className="text-sm font-semibold text-white">{p.name}</p>
+              <p className="mt-1 text-xs text-white/55">{p.desc}</p>
+              <div className="mt-6 flex items-baseline gap-1.5">
+                <span className="text-5xl font-semibold tracking-tight text-white">${p.price}</span>
+                <span className="text-xs text-white/50">{p.per}</span>
+              </div>
+              <Link to="/login">
+                <Button className={`mt-6 w-full ${p.popular ? "bg-white text-slate-900 hover:bg-white/90" : "bg-white/5 text-white ring-1 ring-white/15 hover:bg-white/10"}`}>
+                  {p.name === "Free" ? "Start free" : `Choose ${p.name}`}
+                </Button>
+              </Link>
+              <ul className="mt-7 space-y-2.5 text-sm text-white/75">
+                {p.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5">
+                    <span className={`mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full ${p.popular ? "bg-blue-400/20 text-blue-300" : "bg-white/10 text-white/70"}`}>
+                      <Check className="h-3 w-3" />
+                    </span>
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
       {/* Final CTA */}
       <section className="relative z-10 mx-auto max-w-7xl px-6 pb-24">
         <motion.div
           initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }}
-          className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-12 md:p-16"
+          className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-12 md:p-20"
         >
           <div className="absolute inset-0 grid-bg opacity-20" />
           <div className="absolute inset-0 noise" />
-          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/20 blur-3xl" />
+          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/20 blur-3xl animate-float-slow" />
+          <div className="absolute -left-20 -bottom-20 h-72 w-72 rounded-full bg-fuchsia-400/30 blur-3xl animate-float-slower" />
           <div className="relative mx-auto max-w-2xl text-center">
-            <h2 className="text-balance text-4xl font-semibold tracking-tight text-white md:text-5xl">
-              <span className="text-shimmer">Your next skill is one exchange away.</span>
-            </h2>
-            <p className="mt-4 text-white/80">Join 3,800+ engineers trading the kind of expertise you can't get from a course.</p>
+            <div className="orbit-ring relative mx-auto inline-block">
+              <h2 className="relative text-balance text-4xl font-semibold tracking-tight text-white md:text-5xl">
+                <span className="text-shimmer">Your next skill is one exchange away.</span>
+              </h2>
+            </div>
+            <p className="mt-6 text-white/80">Join 3,800+ engineers trading the kind of expertise you can't get from a course.</p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link to="/login">
-                <Button size="lg" className="h-12 bg-white px-7 text-slate-900 hover:bg-white/90">
-                  Create your account <ArrowRight className="h-4 w-4" />
+                <Button size="lg" className="h-12 bg-white px-7 text-slate-900 hover:bg-white/90 shadow-2xl">
+                  Start free <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
               <Link to="/login">
                 <Button size="lg" variant="outline" className="h-12 border-white/30 bg-transparent px-7 text-white hover:bg-white/10 hover:text-white">
-                  I already have an account
+                  Talk to sales
                 </Button>
               </Link>
             </div>
+            <p className="mt-5 text-xs text-white/55">No credit card · Cancel anytime · 60-second signup</p>
           </div>
         </motion.div>
       </section>
