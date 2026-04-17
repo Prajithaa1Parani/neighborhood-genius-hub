@@ -1,15 +1,20 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { allSkills, categories } from "@/lib/mock-data";
-import { AppHeader, BottomNav } from "@/components/AppLayout";
-import { Search, Star, MapPin, ArrowRight } from "lucide-react";
+import { useExchanges } from "@/lib/exchanges-context";
+import { categories, levels } from "@/lib/mock-data";
+import { PageShell } from "@/components/AppLayout";
+import { SkillCard } from "@/components/SkillCard";
+import { PostSkillDialog } from "@/components/PostSkillDialog";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search } from "lucide-react";
 
 export const Route = createFileRoute("/market")({
   head: () => ({
     meta: [
       { title: "Skill Market — The Exchange" },
-      { name: "description", content: "Browse and discover skills in your neighborhood" },
+      { name: "description", content: "Browse engineering skills offered by other software engineers nearby." },
     ],
   }),
   component: MarketPage,
@@ -17,118 +22,116 @@ export const Route = createFileRoute("/market")({
 
 function MarketPage() {
   const { isAuthenticated } = useAuth();
+  const { skills } = useExchanges();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All Skills");
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeLevel, setActiveLevel] = useState<(typeof levels)[number]>("All Levels");
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate({ to: "/login" });
-    }
+    if (!isAuthenticated) navigate({ to: "/login" });
   }, [isAuthenticated, navigate]);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return skills.filter(s => {
+      const matchSearch = !q || s.title.toLowerCase().includes(q) ||
+        s.description.toLowerCase().includes(q) ||
+        s.tags.some(t => t.toLowerCase().includes(q));
+      const matchCat = activeCategory === "All" || s.category === activeCategory;
+      const matchLevel = activeLevel === "All Levels" || s.level === activeLevel;
+      return matchSearch && matchCat && matchLevel;
+    });
+  }, [skills, search, activeCategory, activeLevel]);
 
   if (!isAuthenticated) return null;
 
-  const filtered = allSkills.filter(s => {
-    const matchesSearch = s.title.toLowerCase().includes(search.toLowerCase()) || s.tags.some(t => t.toLowerCase().includes(search.toLowerCase()));
-    const matchesCat = activeCategory === "All Skills" || s.category === activeCategory;
-    return matchesSearch && matchesCat;
-  });
-
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <AppHeader />
-      <main className="mx-auto max-w-lg px-4 py-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground">What will you<br /><span className="text-primary">learn</span> today?</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Connect with local experts in your neighborhood. Exchange your craft for theirs.</p>
+    <PageShell>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="eyebrow">Skill Market</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+            What will you learn next?
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Browse skills offered by engineers across web, backend, ML, DevOps and security.
+          </p>
         </div>
+        <PostSkillDialog />
+      </div>
 
-        {/* Search */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search skills, topics..."
-            className="w-full rounded-xl border border-input bg-card py-2.5 pl-10 pr-4 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
+      {/* Filter bar */}
+      <Card className="sticky top-[64px] z-20 mb-6 border-border bg-card/95 shadow-none backdrop-blur">
+        <CardContent className="space-y-3 p-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search skills, tags, or topics…"
+              className="pl-9"
+            />
+          </div>
 
-        {/* Categories */}
-        <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
-                activeCategory === cat
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-accent"
-              }`}
-            >
-              {cat}
+          <div className="flex flex-wrap gap-2">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  activeCategory === cat
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+            <span className="self-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Level:</span>
+            {levels.map(lvl => (
+              <button
+                key={lvl}
+                onClick={() => setActiveLevel(lvl)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  activeLevel === lvl
+                    ? "border-navy bg-navy text-navy-foreground"
+                    : "border-border bg-card text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {lvl}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Results */}
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">{filtered.length}</span> skill{filtered.length === 1 ? "" : "s"} found
+        </p>
+      </div>
+
+      {filtered.length === 0 ? (
+        <Card className="border-dashed bg-card text-center">
+          <CardContent className="p-12">
+            <p className="text-sm text-muted-foreground">No skills match your filters.</p>
+            <button onClick={() => { setSearch(""); setActiveCategory("All"); setActiveLevel("All Levels"); }} className="mt-2 text-sm font-medium text-primary hover:underline">
+              Reset filters
             </button>
-          ))}
-        </div>
-
-        {/* Skills */}
-        <div className="space-y-4">
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map(skill => (
-            <div key={skill.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-              <img src={skill.image} alt={skill.title} className="h-40 w-full object-cover" />
-              <div className="p-4">
-                <div className="mb-2 flex items-start justify-between">
-                  <h3 className="text-base font-bold text-card-foreground">{skill.title}</h3>
-                  <div className="flex items-center gap-0.5">
-                    <Star className="h-3.5 w-3.5 fill-warning text-warning" />
-                    <span className="text-sm font-semibold text-foreground">{skill.rating}</span>
-                  </div>
-                </div>
-                <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
-                  <img src={skill.instructor.avatar} alt={skill.instructor.name} className="h-5 w-5 rounded-full" />
-                  <span>{skill.instructor.name}</span>
-                  <span>•</span>
-                  <span>{skill.duration}</span>
-                </div>
-                <p className="mb-3 text-xs leading-relaxed text-muted-foreground">{skill.description}</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-xs text-stat-green">
-                    <MapPin className="h-3 w-3" />
-                    {skill.distance}
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {skill.tags.slice(0, 2).map(tag => (
-                      <span key={tag} className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90">
-                  Exchange <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+            <SkillCard key={skill.id} skill={skill} />
           ))}
-          {filtered.length === 0 && (
-            <div className="py-12 text-center text-muted-foreground">
-              <p className="text-sm">No skills found matching your search.</p>
-            </div>
-          )}
         </div>
-
-        {/* Don't see your skill CTA */}
-        <div className="mt-6 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 text-center">
-          <p className="text-sm font-medium text-foreground">Don't see your skill?</p>
-          <p className="mt-1 text-xs text-muted-foreground">Start by registering something to offer and find matches nearby.</p>
-          <button className="cta-gradient mt-3 rounded-full px-6 py-2 text-xs font-semibold text-primary-foreground">
-            Post a Skill
-          </button>
-        </div>
-      </main>
-      <BottomNav />
-    </div>
+      )}
+    </PageShell>
   );
 }

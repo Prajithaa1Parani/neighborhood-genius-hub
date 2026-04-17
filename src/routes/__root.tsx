@@ -1,5 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth-context";
+import { ExchangesProvider } from "@/lib/exchanges-context";
+import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 
@@ -25,10 +27,10 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "The Exchange — Hyperlocal Skill Exchange" },
-      { name: "description", content: "Exchange skills with your neighbors. Learn, teach, and grow together in your local community." },
-      { property: "og:title", content: "The Exchange — Hyperlocal Skill Exchange" },
-      { property: "og:description", content: "Exchange skills with your neighbors." },
+      { title: "The Exchange — Engineering Skill Network" },
+      { name: "description", content: "Trade engineering skills with other software engineers. System design, ML, DevOps, security and more." },
+      { property: "og:title", content: "The Exchange — Engineering Skill Network" },
+      { property: "og:description", content: "Trade engineering skills with other software engineers." },
       { property: "og:type", content: "website" },
     ],
     links: [
@@ -58,7 +60,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <AuthProvider>
-      <Outlet />
+      <ExchangesProvider>
+        <Outlet />
+        <Toaster position="top-right" richColors />
+      </ExchangesProvider>
     </AuthProvider>
   );
 }
