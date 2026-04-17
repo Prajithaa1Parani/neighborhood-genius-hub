@@ -1,7 +1,16 @@
+// ─── DSA USED IN THIS FILE ─────────────────────────────────────
+// • Graph + BFS (src/lib/dsa/graph.ts) — builds a bipartite
+//   skill ↔ mentor graph and runs BFS from the user's
+//   `skillsNeeded` to compute a relevance ranking. Mentors with
+//   the *shortest* path from any needed skill are recommended.
+// ───────────────────────────────────────────────────────────────
+
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useExchanges } from "@/lib/exchanges-context";
+import { mentorSlug } from "@/lib/mock-data";
+import { Graph } from "@/lib/dsa";
 import { ArrowUpRight, Clock, Star, MessageSquare, ChevronRight } from "lucide-react";
 import { PageShell } from "@/components/AppLayout";
 import { StatCard } from "@/components/StatCard";
@@ -30,10 +39,37 @@ function DashboardPage() {
     if (!isAuthenticated || !user) navigate({ to: "/login" });
   }, [isAuthenticated, user, navigate]);
 
-  if (!isAuthenticated || !user) return null;
-
   const activeOnes = exchanges.filter(e => e.status !== "Completed");
-  const recommended = skills.slice(0, 3);
+
+  // ─── BFS-driven recommendations ───
+  const recommended = useMemo(() => {
+    if (!user) return skills.slice(0, 3);
+    // Build graph: node = "skill:<title>" or "mentor:<id>"
+    const g = new Graph<string>();
+    const skillNode = (t: string) => `skill:${t.toLowerCase()}`;
+    const mentorNode = (id: string) => `mentor:${id}`;
+
+    for (const s of skills) {
+      const mid = mentorSlug(s.instructor.name);
+      // Connect skill ↔ mentor
+      g.addEdge(skillNode(s.title), mentorNode(mid));
+      // Also connect tags ↔ skill so similar tags share neighbours
+      for (const tag of s.tags) g.addEdge(skillNode(tag), skillNode(s.title));
+    }
+
+    // Sources: tokens from user's skillsNeeded
+    const sources = user.skillsNeeded.flatMap(n =>
+      n.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).map(skillNode)
+    );
+
+    const dist = g.bfsFromMany(sources);
+    // Score skills by min distance to ANY source through their node
+    const scored = skills.map(s => ({ s, d: dist.get(skillNode(s.title)) ?? Infinity }));
+    scored.sort((a, b) => a.d - b.d);
+    return scored.slice(0, 3).map(x => x.s);
+  }, [skills, user]);
+
+  if (!isAuthenticated || !user) return null;
 
   return (
     <PageShell>
@@ -42,7 +78,7 @@ function DashboardPage() {
         <div>
           <p className="eyebrow">Dashboard</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-            Welcome back, Prajithaa 👋
+            Welcome back, {user.name.split(" ")[0]} 👋
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             You have {activeOnes.length} active exchange{activeOnes.length === 1 ? "" : "s"} and 3 new skill matches in your network.
@@ -58,9 +94,7 @@ function DashboardPage() {
         <StatCard icon={Star} label="Community Rating" value={user.communityRating.toFixed(2)} sublabel={`${user.reviewCount} reviews`} tone="warning" />
       </div>
 
-      {/* 2-col layout for active exchanges + sidebar */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Active exchanges */}
         <section className="lg:col-span-2">
           <div className="mb-3 flex items-center justify-between">
             <div>
@@ -77,40 +111,46 @@ function DashboardPage() {
                   No active exchanges. Browse the market to request one.
                 </li>
               )}
-              {activeOnes.map(ex => (
-                <li key={ex.id} className="flex items-center gap-4 p-4">
-                  <img src={ex.partnerAvatar} alt={ex.partner} className="h-11 w-11 rounded-full object-cover" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-medium text-foreground">{ex.skill}</p>
-                      <Badge
-                        variant="secondary"
-                        className={
-                          ex.status === "In Progress"
-                            ? "bg-blue-50 text-blue-700 border-blue-200"
-                            : "bg-amber-50 text-amber-700 border-amber-200"
-                        }
-                      >
-                        {ex.status}
-                      </Badge>
+              {activeOnes.map(ex => {
+                const mid = mentorSlug(ex.partner);
+                return (
+                  <li key={ex.id} className="flex items-center gap-4 p-4">
+                    <Link to="/mentor/$mentorId" params={{ mentorId: mid }} className="shrink-0">
+                      <img src={ex.partnerAvatar} alt={ex.partner} className="h-11 w-11 rounded-full object-cover" />
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-medium text-foreground">{ex.skill}</p>
+                        <Badge
+                          variant="secondary"
+                          className={
+                            ex.status === "In Progress"
+                              ? "bg-blue-50 text-blue-700 border-blue-200"
+                              : "bg-amber-50 text-amber-700 border-amber-200"
+                          }
+                        >
+                          {ex.status}
+                        </Badge>
+                      </div>
+                      <Link to="/mentor/$mentorId" params={{ mentorId: mid }} className="text-xs text-muted-foreground hover:text-primary">
+                        with {ex.partner}
+                      </Link>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${ex.progress}%` }} />
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">with {ex.partner}</p>
-                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${ex.progress}%` }} />
-                    </div>
-                  </div>
-                  <Link to="/chat" aria-label="Message">
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-                      <MessageSquare className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                </li>
-              ))}
+                    <Link to="/chat" aria-label="Message">
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </Card>
         </section>
 
-        {/* Side card — share / mentor CTA */}
         <aside>
           <p className="eyebrow mb-2">Mentorship</p>
           <Card className="border-border bg-navy text-navy-foreground shadow-none">
@@ -131,11 +171,11 @@ function DashboardPage() {
         </aside>
       </div>
 
-      {/* Recommended */}
       <section className="mt-10">
         <div className="mb-3">
-          <p className="eyebrow">Local Discovery</p>
+          <p className="eyebrow">BFS-powered Discovery</p>
           <h2 className="text-lg font-semibold text-foreground">Recommended for you</h2>
+          <p className="text-xs text-muted-foreground">Mentors closest to your <span className="font-medium text-foreground">skillsNeeded</span> in our skill-similarity graph.</p>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {recommended.map(skill => (
