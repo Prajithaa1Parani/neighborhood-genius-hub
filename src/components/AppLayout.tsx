@@ -6,7 +6,7 @@
 
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { LayoutGrid, Store, MessageCircle, UserCircle, Bell, Code2, LogOut, CheckCheck, Trash2 } from "lucide-react";
+import { LayoutGrid, Store, MessageCircle, UserCircle, Bell, Code2, LogOut, CheckCheck, Trash2, FileText, History } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { notifications as initialNotifications } from "@/lib/mock-data";
 import { PriorityQueue } from "@/lib/dsa";
@@ -32,6 +32,8 @@ import {
 const navItems = [
   { to: "/dashboard" as const, icon: LayoutGrid, label: "Dashboard" },
   { to: "/market" as const, icon: Store, label: "Market" },
+  { to: "/my-posts" as const, icon: FileText, label: "My Posts" },
+  { to: "/history" as const, icon: History, label: "History" },
   { to: "/chat" as const, icon: MessageCircle, label: "Chat" },
   { to: "/profile" as const, icon: UserCircle, label: "Profile" },
 ];
