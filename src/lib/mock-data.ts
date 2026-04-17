@@ -31,7 +31,7 @@ export interface Skill {
   duration: string;
   tags: string[];
   pricePerHour: number; // 0 = free skill swap, otherwise ₹/hr
-  postedBy: string; // user id of poster
+  postedBy?: string; // user id of poster (omitted = community / other mentor)
   postedAt?: string; // ISO date
   views?: number;
   requestCount?: number;
