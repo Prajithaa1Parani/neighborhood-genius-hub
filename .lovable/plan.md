@@ -1,51 +1,83 @@
 
-## Why you can't see the landing page
 
-It exists at `/` (root URL) and is fully built — animated aurora hero, marquee logos, live network SVG, bento features, typing terminal, count-up stats, testimonials, footer. The problem is **navigation**: you're stuck on `/login` because:
-1. There's no visible "back to home" link from `/login`
-2. Once authenticated, `/login` auto-redirects to `/dashboard`, skipping `/`
-3. The sidebar inside the app has no link back to the landing page
+## Plan: Hover-collapsible Sidebar, Profile Pages, Working Notifications/Chat & DSA Integration
 
-## Plan: Make the landing page reachable + elevate it further
+### 1. Sidebar — icon-only by default, expand on hover
+Change `src/components/AppLayout.tsx`:
+- Set `Sidebar` default state to `collapsed` (icon-only, ~3rem wide)
+- Add `onMouseEnter` → expand, `onMouseLeave` → collapse (controlled `open` state via `SidebarProvider`)
+- Solid (non-transparent) background: change `TopBar` from `bg-card/80 backdrop-blur` to solid `bg-card`
+- Footer shows just **"Prajithaa"** (first name only)
 
-### 1. Fix discoverability (the real bug)
-- Add a **"← Back to home"** link at the top-left of `/login` that routes to `/`
-- Add a **"Home"** / logo click in the app sidebar (`AppLayout.tsx`) that routes to `/`
-- Keep `/login` redirect to `/dashboard` only when user submits — not on mount if they came from `/`
+### 2. Rename user → "Prajithaa"
+In `src/lib/mock-data.ts`: change `currentUser.name` from `"Prajithaa Ramesh"` to `"Prajithaa"`. Dashboard greeting already uses first name.
 
-### 2. Elevate the landing page to truly "grand & rich"
-Even though it's already cinematic, push it further:
+### 3. Skill exchange with charging + ratings
+Update `Skill` type in `mock-data.ts` to include `pricePerHour: number` (0 = free swap). Update all 10 mock skills with prices (₹0–₹1500/hr). In `SkillCard.tsx` show price badge + existing rating. In `PostSkillDialog.tsx` add a price input (with "Free skill swap" toggle).
 
-- **Hero upgrades**
-  - Add a **3D-tilt** effect on the floating preview card (mouse-follow rotateX/rotateY via framer-motion)
-  - Add a **spotlight cursor** glow that follows the mouse across the hero
-  - Replace the static "847 engineers online" pill with a **live ticker** that changes numbers every few seconds
-  - Add **scroll-indicator** chevron at the bottom of hero with bounce animation
+### 4. Mentor profile pages (new full route)
+Create `src/routes/mentor.$mentorId.tsx` — rich, structured profile page for any mentor:
+- Hero band: avatar, name, title, verified badge, rating, location, hourly price, **Message** + **Request Exchange** CTAs
+- Sections (cards): About, Skills they teach (full list with levels/prices), Skills they want to learn, Experience timeline, Reviews, Availability
+- Build a `mentors` registry in `mock-data.ts` keyed by id (derived from existing instructor names + avatars + augmented bios/skills)
+- Add 404 `notFoundComponent` per Tanstack rules
+- In **Market** (`SkillCard.tsx`): add a **"View profile"** icon button (UserRound icon) next to the Request button → links to `/mentor/$mentorId`
+- In **Chat** thread header: avatar + name become a link to `/mentor/$mentorId`
+- In **Dashboard** active exchanges: partner avatar links to mentor profile
 
-- **New section: "Skills in motion"** (between marquee and features)
-  - Horizontal scrolling row of large skill tag chips (System Design, Kubernetes, ML Ops, etc.) that scroll opposite direction to the logo marquee — creates depth
+### 5. Functional notifications
+Replace static array with stateful notifications in `AppLayout.tsx`:
+- `useState` list with `read: boolean` flag, badge count = unread only
+- Click notification → mark read, navigate to relevant route (chat / market / dashboard)
+- "Mark all as read" button in popover header
+- "Clear all" button at bottom
+- Add 2 more notification types so popover feels alive
 
-- **Bento grid polish**
-  - Add **animated gradient borders** that rotate around each card on hover (conic-gradient mask trick)
-  - Add **mini-charts** inside one of the small cards (animated SVG sparkline)
+### 6. Functional chat — bug fixes
+In `src/routes/chat.tsx`:
+- Fix unread badge: clear `convo.unread` on select (currently never resets)
+- Fix `lastMessage` + `timestamp` in conversation list to update after sending
+- Use `useState(conversations)` instead of imported const so list re-renders
+- Disable send while empty + add Enter-to-send (already works but double-check shift-enter inserts newline via `<Textarea>`)
+- Persist messages per convo on switch (already does)
+- Fix scroll-to-bottom on convo switch (currently only triggers on length change)
 
-- **New section: "Meet the engineers"** (before testimonials)
-  - 4-column grid of avatar cards from `public/avatars/` with name, role, specialty tags
-  - Hover lifts card with shadow + reveals "View profile" button
+### 7. DSA algorithms (the academic centerpiece)
+Create a new file **`src/lib/dsa/`** folder with named, commented implementations actually used by the app. Each function has a header comment: *what DSA, why used, time/space complexity*.
 
-- **Pricing teaser** (new section, before final CTA)
-  - 3 plan cards (Free / Pro $19 / Team $49) with checkmark feature lists, "Most popular" ribbon on Pro
+| File | DSA used | Where it powers the app |
+|---|---|---|
+| `src/lib/dsa/trie.ts` | **Trie (prefix tree)** | Market search autocomplete — O(L) prefix lookup over all skill titles/tags |
+| `src/lib/dsa/fuzzySearch.ts` | **Levenshtein distance (DP)** | Market typo-tolerant search ("kuburnetes" → Kubernetes) |
+| `src/lib/dsa/quickSort.ts` | **Quicksort (divide & conquer)** | Sort skills by rating / price / distance in Market |
+| `src/lib/dsa/binarySearch.ts` | **Binary search** | Filter skills within a price range on sorted array |
+| `src/lib/dsa/priorityQueue.ts` | **Min-heap / priority queue** | Notifications ordered by recency + priority weight |
+| `src/lib/dsa/lru.ts` | **LRU cache (HashMap + Doubly linked list)** | Cache last 5 viewed mentor profiles for instant back-navigation |
+| `src/lib/dsa/graph.ts` | **Graph + BFS** | "Recommended mentors" — BFS over a skill-similarity graph from user's `skillsNeeded` (shortest path = most relevant mentor) |
+| `src/lib/dsa/debounce.ts` | **Debouncing (queue/timer)** | Search input — limits trie queries to 1 per 200ms |
 
-- **Final CTA upgrade**
-  - Add **animated noise texture** + **glowing orbit ring** around the headline
-  - Two CTAs: "Start free" + "Talk to sales"
+**Integration points** (so the DSA isn't dead code):
+- `market.tsx` — use `Trie` + `fuzzySearch` for search, `quickSort` for sort dropdown (new), `binarySearch` for price-range filter (new), `debounce` for input
+- `dashboard.tsx` — use `graph.bfs` to compute "Recommended for you"
+- `mentor.$mentorId.tsx` — `LRU` cache hooks
+- `AppLayout.tsx` — `priorityQueue` to order notifications
 
-- **Sticky top nav** with **scroll-blur** (backdrop-filter increases with scroll)
+Each integration point gets a top-of-file comment block:
+```ts
+// ─── DSA USED IN THIS FILE ─────────────────────────
+// • Trie (src/lib/dsa/trie.ts) — prefix search
+// • Quicksort (src/lib/dsa/quickSort.ts) — sort by rating
+// ───────────────────────────────────────────────────
+```
 
-### 3. Files to edit
-- `src/routes/index.tsx` — add new sections (Skills marquee #2, Engineers grid, Pricing, hero spotlight, scroll indicator)
-- `src/routes/login.tsx` — add "Back to home" link
-- `src/components/AppLayout.tsx` — make sidebar logo link to `/`
-- `src/styles.css` — add `@keyframes` for spotlight, orbit-ring, scroll-bounce; add `.spotlight` and `.tilt-card` utilities
+Update **`DSA_CONCEPTS.md`** at project root with a clear table:
+- DSA name → file path → exact line range → real-world purpose in this app → time/space complexity → talking points for the viva
 
-No new dependencies. After this, the landing page will be unmistakably visible and significantly richer.
+### Files to edit / create
+
+**Edit**: `src/components/AppLayout.tsx`, `src/lib/mock-data.ts`, `src/components/SkillCard.tsx`, `src/components/PostSkillDialog.tsx`, `src/routes/market.tsx`, `src/routes/chat.tsx`, `src/routes/dashboard.tsx`, `DSA_CONCEPTS.md`
+
+**Create**: `src/routes/mentor.$mentorId.tsx`, `src/lib/dsa/{trie,fuzzySearch,quickSort,binarySearch,priorityQueue,lru,graph,debounce}.ts`, `src/lib/dsa/index.ts` (barrel)
+
+No new dependencies.
+
