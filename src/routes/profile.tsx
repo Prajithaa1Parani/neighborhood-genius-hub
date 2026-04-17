@@ -2,14 +2,17 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { reviews } from "@/lib/mock-data";
-import { AppHeader, BottomNav } from "@/components/AppLayout";
-import { Star, MapPin, Calendar, Shield, LogOut, ChevronRight } from "lucide-react";
+import { PageShell } from "@/components/AppLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Star, MapPin, Calendar, Shield, LogOut, MessageSquare, Share2 } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
       { title: "Profile — The Exchange" },
-      { name: "description", content: "Your skill exchange profile" },
+      { name: "description", content: "Your engineering skill exchange profile" },
     ],
   }),
   component: ProfilePage,
@@ -20,9 +23,7 @@ function ProfilePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAuthenticated || !user) {
-      navigate({ to: "/login" });
-    }
+    if (!isAuthenticated || !user) navigate({ to: "/login" });
   }, [isAuthenticated, user, navigate]);
 
   if (!isAuthenticated || !user) return null;
@@ -33,129 +34,136 @@ function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <AppHeader />
-      <main className="mx-auto max-w-lg px-4 py-6">
-        {/* Profile Header */}
-        <div className="mb-6 text-center">
-          <div className="relative mx-auto mb-3 h-24 w-24">
-            <img src={user.avatar} alt={user.name} className="h-24 w-24 rounded-full border-4 border-card shadow-lg" />
-            {user.isVerified && (
-              <div className="absolute -right-1 bottom-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <Shield className="h-4 w-4" />
+    <PageShell>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Left — sticky profile card */}
+        <aside className="lg:col-span-1">
+          <Card className="sticky top-20 border-border shadow-none">
+            <CardContent className="p-6 text-center">
+              <div className="relative mx-auto mb-4 h-24 w-24">
+                <img src={user.avatar} alt={user.name} className="h-24 w-24 rounded-full border-4 border-card object-cover shadow-sm" />
+                {user.isVerified && (
+                  <div className="absolute -right-1 bottom-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-card bg-primary text-primary-foreground">
+                    <Shield className="h-3.5 w-3.5" />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <span className="inline-block rounded-full bg-stat-green/15 px-3 py-0.5 text-[10px] font-semibold text-stat-green mb-2">Pro Member</span>
-          <h1 className="text-xl font-bold text-foreground">{user.name}</h1>
-          <p className="text-sm text-muted-foreground">{user.title}</p>
-          <div className="mt-2 flex items-center justify-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{user.location}</span>
-            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />Joined {user.joinedDate}</span>
-          </div>
-          <div className="mt-2 flex items-center justify-center gap-1">
-            <Star className="h-4 w-4 fill-warning text-warning" />
-            <span className="text-sm font-semibold text-foreground">{user.rating}</span>
-            <span className="text-xs text-muted-foreground">({user.reviewCount} reviews)</span>
-          </div>
-          <div className="mt-4 flex justify-center gap-3">
-            <button className="cta-gradient rounded-full px-6 py-2 text-sm font-semibold text-primary-foreground">Swap Skills</button>
-            <button className="rounded-full border border-border bg-card px-6 py-2 text-sm font-semibold text-foreground">Share</button>
-          </div>
-        </div>
+              <h1 className="text-lg font-semibold text-foreground">{user.name}</h1>
+              <p className="mt-0.5 text-sm text-muted-foreground">{user.title}</p>
 
-        {/* About */}
-        <section className="mb-6">
-          <h2 className="mb-2 text-xs font-semibold tracking-widest text-primary">ABOUT</h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">{user.bio}</p>
-        </section>
+              <div className="mt-3 flex items-center justify-center gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {user.location}</span>
+                <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {user.joinedDate}</span>
+              </div>
 
-        {/* Reviews */}
-        <section className="mb-6">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xs font-semibold tracking-widest text-primary">RECENT REVIEWS</h2>
-            <button className="text-xs font-medium text-primary">View All</button>
+              <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 border border-amber-200">
+                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                <span className="text-xs font-semibold text-amber-700">{user.rating}</span>
+                <span className="text-xs text-amber-700/70">· {user.reviewCount} reviews</span>
+              </div>
+
+              <div className="mt-5 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
+                <div>
+                  <p className="text-lg font-semibold text-foreground">{user.skillsExchanged}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Swaps</p>
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-foreground">{user.hoursEarned}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Hours</p>
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-foreground">98%</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Complete</p>
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-2">
+                <Button className="w-full"><MessageSquare className="h-4 w-4" /> Message</Button>
+                <Button variant="outline" className="w-full"><Share2 className="h-4 w-4" /> Share</Button>
+              </div>
+
+              <Button onClick={handleLogout} variant="ghost" className="mt-4 w-full text-destructive hover:bg-destructive/5 hover:text-destructive">
+                <LogOut className="h-4 w-4" /> Sign out
+              </Button>
+            </CardContent>
+          </Card>
+        </aside>
+
+        {/* Right column */}
+        <div className="space-y-6 lg:col-span-2">
+          <Card className="border-border shadow-none">
+            <CardHeader>
+              <p className="eyebrow">About</p>
+              <CardTitle className="text-lg">Background</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm leading-relaxed text-muted-foreground">{user.bio}</p>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <Card className="border-border shadow-none">
+              <CardHeader>
+                <p className="eyebrow">Skills offered</p>
+                <CardTitle className="text-base">What I teach</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {user.skillsOffered.map(s => (
+                  <div key={s.id} className="rounded-md border border-border bg-card p-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-foreground">{s.title}</p>
+                      <Badge variant="secondary" className="text-[10px]">{s.level}</Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">{s.category} · {s.duration}</p>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card className="border-border shadow-none">
+              <CardHeader>
+                <p className="eyebrow">Skills wanted</p>
+                <CardTitle className="text-base">What I want to learn</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {user.skillsNeeded.map(skill => (
+                    <Badge key={skill} variant="outline" className="rounded-full px-3 py-1 text-xs font-medium">
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <div className="space-y-3">
-            {reviews.map(review => (
-              <div key={review.id} className="rounded-xl border border-border bg-card p-4">
-                <div className="mb-2 flex items-center gap-2">
-                  <img src={review.avatar} alt={review.author} className="h-8 w-8 rounded-full" />
-                  <div>
-                    <p className="text-sm font-semibold text-card-foreground">{review.author}</p>
-                    <div className="flex items-center gap-1">
-                      {[...Array(review.rating)].map((_, i) => (
-                        <Star key={i} className="h-3 w-3 fill-warning text-warning" />
+
+          <Card className="border-border shadow-none">
+            <CardHeader>
+              <p className="eyebrow">Reviews</p>
+              <CardTitle className="text-lg">Recent feedback</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {reviews.map(r => (
+                <div key={r.id} className="flex gap-3 border-b border-border pb-4 last:border-b-0 last:pb-0">
+                  <img src={r.avatar} alt={r.author} className="h-9 w-9 rounded-full object-cover" />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-foreground">{r.author}</p>
+                      <span className="text-[11px] text-muted-foreground">{r.date}</span>
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-0.5">
+                      {[...Array(r.rating)].map((_, i) => (
+                        <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />
                       ))}
                     </div>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{r.text}</p>
                   </div>
                 </div>
-                <p className="text-xs leading-relaxed text-muted-foreground">{review.text}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Skills Offered */}
-        <section className="mb-6">
-          <h2 className="mb-3 text-xs font-semibold tracking-widest text-primary">SKILLS OFFERED</h2>
-          <div className="flex flex-wrap gap-2">
-            {user.skillsOffered.map(skill => (
-              <span key={skill.id} className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">
-                {skill.title}
-              </span>
-            ))}
-          </div>
-        </section>
-
-        {/* Skills Needed */}
-        <section className="mb-6">
-          <h2 className="mb-3 text-xs font-semibold tracking-widest text-primary">SKILLS NEEDED</h2>
-          <div className="flex flex-wrap gap-2">
-            {user.skillsNeeded.map(skill => (
-              <span key={skill} className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                {skill}
-              </span>
-            ))}
-          </div>
-        </section>
-
-        {/* Stats */}
-        <section className="mb-6">
-          <h2 className="mb-3 text-xs font-semibold tracking-widest text-primary">SKILL COMPLETION</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-primary/5 p-4 text-center">
-              <p className="text-2xl font-bold text-primary">{user.skillsExchanged}</p>
-              <p className="text-[10px] text-muted-foreground">Skills Exchanged</p>
-            </div>
-            <div className="rounded-xl bg-stat-green/10 p-4 text-center">
-              <p className="text-2xl font-bold text-stat-green">98%</p>
-              <p className="text-[10px] text-muted-foreground">Completion Rate</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Verified Badge */}
-        {user.isVerified && (
-          <div className="mb-6 flex items-center gap-3 rounded-xl border border-stat-green/30 bg-stat-green/5 p-4">
-            <Shield className="h-8 w-8 text-stat-green" />
-            <div>
-              <p className="text-sm font-semibold text-foreground">Exchange Verified</p>
-              <p className="text-xs text-muted-foreground">Identity, accuracy, community standards confirmed</p>
-            </div>
-          </div>
-        )}
-
-        {/* Logout */}
-        <button
-          onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 py-3 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
-        >
-          <LogOut className="h-4 w-4" />
-          Sign Out
-        </button>
-      </main>
-      <BottomNav />
-    </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </PageShell>
   );
 }
