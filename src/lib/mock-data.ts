@@ -85,8 +85,8 @@ export const DEMO_CREDENTIALS = {
 
 export const currentUser: User = {
   id: "u1",
-  name: "Arjun Mehta",
-  avatar: AVATARS.arjun,
+  name: "Prajithaa Ramesh",
+  avatar: AVATARS.priya,
   title: "Senior Backend Engineer · Distributed Systems",
   location: "Bengaluru, India",
   joinedDate: "Feb 2023",

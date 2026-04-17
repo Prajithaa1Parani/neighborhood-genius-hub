@@ -42,7 +42,7 @@ function DashboardPage() {
         <div>
           <p className="eyebrow">Dashboard</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-            Welcome back, {user.name.split(" ")[0]}
+            Welcome back, Prajithaa 👋
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             You have {activeOnes.length} active exchange{activeOnes.length === 1 ? "" : "s"} and 3 new skill matches in your network.
