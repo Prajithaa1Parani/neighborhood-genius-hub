@@ -1,13 +1,24 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+// ─── DSA USED IN THIS FILE ─────────────────────────────────────
+// • Hash Map (Record<string, ChatMessage[]>) — O(1) lookup of
+//   messages by conversation id.
+// • Queue (FIFO) — chat messages stored in chronological order.
+// • Buffered stream parsing — incremental SSE line extraction.
+// ───────────────────────────────────────────────────────────────
+
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { conversations, chatMessages, type ChatMessage, type ChatConversation } from "@/lib/mock-data";
+import {
+  conversations as initialConversations,
+  chatMessages, mentorSlug,
+  type ChatMessage, type ChatConversation,
+} from "@/lib/mock-data";
 import { PageShell } from "@/components/AppLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Send, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Sparkles, UserRound } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -82,10 +93,16 @@ async function streamChatReply({
   }
 }
 
-function ConversationList({ active, onSelect }: { active: ChatConversation | null; onSelect: (c: ChatConversation) => void }) {
+function ConversationList({
+  convos, active, onSelect,
+}: {
+  convos: ChatConversation[];
+  active: ChatConversation | null;
+  onSelect: (c: ChatConversation) => void;
+}) {
   return (
     <ul className="divide-y divide-border">
-      {conversations.map(convo => {
+      {convos.map(convo => {
         const isActive = active?.id === convo.id;
         return (
           <li key={convo.id}>
@@ -120,19 +137,25 @@ function ConversationList({ active, onSelect }: { active: ChatConversation | nul
   );
 }
 
-function ChatThread({ convo, onBack }: { convo: ChatConversation; onBack: () => void }) {
-  const [allMessages, setAllMessages] = useState<Record<string, ChatMessage[]>>(chatMessages);
+function ChatThread({
+  convo, allMessages, setAllMessages, onBack,
+}: {
+  convo: ChatConversation;
+  allMessages: Record<string, ChatMessage[]>;
+  setAllMessages: React.Dispatch<React.SetStateAction<Record<string, ChatMessage[]>>>;
+  onBack: () => void;
+}) {
   const [newMessage, setNewMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const convoMessages = allMessages[convo.id] || [];
+
+  // Scroll on convo switch *and* on new messages
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
-
-  const convoMessages = allMessages[convo.id] || [];
-
-  useEffect(() => { scrollToBottom(); }, [convoMessages.length, scrollToBottom]);
+  useEffect(() => { scrollToBottom(); }, [convo.id, convoMessages.length, scrollToBottom]);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || isTyping) return;
@@ -146,6 +169,7 @@ function ChatThread({ convo, onBack }: { convo: ChatConversation; onBack: () => 
       timestamp: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
     };
 
+    // ─── DSA: enqueue user message into FIFO queue ───
     setAllMessages(prev => ({ ...prev, [convo.id]: [...(prev[convo.id] || []), userMsg] }));
     setIsTyping(true);
 
@@ -188,19 +212,28 @@ function ChatThread({ convo, onBack }: { convo: ChatConversation; onBack: () => 
     });
   };
 
+  const mid = mentorSlug(convo.user.name);
+
   return (
     <div className="flex h-[calc(100vh-180px)] flex-col md:h-[calc(100vh-200px)]">
       {/* Thread header */}
       <div className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
-        <button onClick={onBack} className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground md:hidden">
+        <button onClick={onBack} className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground md:hidden" aria-label="Back">
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <img src={convo.user.avatar} alt={convo.user.name} className="h-9 w-9 rounded-full object-cover" />
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-foreground">{convo.user.name}</p>
-          <p className="text-[11px] text-primary">{convo.user.specialty}</p>
-        </div>
-        <Badge variant="outline" className="gap-1 border-emerald-200 bg-emerald-50 text-emerald-700">
+        <Link to="/mentor/$mentorId" params={{ mentorId: mid }} className="flex flex-1 items-center gap-3 hover:opacity-90">
+          <img src={convo.user.avatar} alt={convo.user.name} className="h-9 w-9 rounded-full object-cover" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-foreground hover:text-primary">{convo.user.name}</p>
+            <p className="text-[11px] text-primary">{convo.user.specialty}</p>
+          </div>
+        </Link>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/mentor/$mentorId" params={{ mentorId: mid }}>
+            <UserRound className="h-3.5 w-3.5" /> View profile
+          </Link>
+        </Button>
+        <Badge variant="outline" className="hidden gap-1 border-emerald-200 bg-emerald-50 text-emerald-700 sm:inline-flex">
           <Sparkles className="h-3 w-3" /> AI persona
         </Badge>
       </div>
@@ -242,11 +275,11 @@ function ChatThread({ convo, onBack }: { convo: ChatConversation; onBack: () => 
           <Input
             value={newMessage}
             onChange={e => setNewMessage(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
+            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
             placeholder={`Ask ${convo.user.name.split(" ")[0]} anything technical…`}
             disabled={isTyping}
           />
-          <Button onClick={sendMessage} disabled={isTyping || !newMessage.trim()} size="icon">
+          <Button onClick={sendMessage} disabled={isTyping || !newMessage.trim()} size="icon" aria-label="Send">
             {isTyping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
@@ -258,11 +291,32 @@ function ChatThread({ convo, onBack }: { convo: ChatConversation; onBack: () => 
 function ChatPage() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Stateful list — must update when we send a message or clear unread
+  const [convos, setConvos] = useState<ChatConversation[]>(initialConversations);
   const [selectedConvo, setSelectedConvo] = useState<ChatConversation | null>(null);
+  const [allMessages, setAllMessages] = useState<Record<string, ChatMessage[]>>(chatMessages);
 
   useEffect(() => {
     if (!isAuthenticated) navigate({ to: "/login" });
   }, [isAuthenticated, navigate]);
+
+  // Sync convo preview (lastMessage / timestamp) whenever messages change
+  useEffect(() => {
+    setConvos(prev => prev.map(c => {
+      const msgs = allMessages[c.id];
+      if (!msgs?.length) return c;
+      const last = msgs[msgs.length - 1];
+      if (!last.text) return c;
+      return { ...c, lastMessage: last.text, timestamp: last.timestamp };
+    }));
+  }, [allMessages]);
+
+  const handleSelect = (c: ChatConversation) => {
+    // Clear unread on open
+    setConvos(prev => prev.map(x => x.id === c.id ? { ...x, unread: 0 } : x));
+    setSelectedConvo({ ...c, unread: 0 });
+  };
 
   if (!isAuthenticated) return null;
 
@@ -278,15 +332,18 @@ function ChatPage() {
 
       <Card className="overflow-hidden border-border shadow-none">
         <div className="grid grid-cols-1 md:grid-cols-[320px_1fr]">
-          {/* Conversation list */}
           <div className={`border-r border-border ${selectedConvo ? "hidden md:block" : ""}`}>
-            <ConversationList active={selectedConvo} onSelect={setSelectedConvo} />
+            <ConversationList convos={convos} active={selectedConvo} onSelect={handleSelect} />
           </div>
 
-          {/* Thread */}
           <div className={`${!selectedConvo ? "hidden md:flex md:items-center md:justify-center" : ""}`}>
             {selectedConvo ? (
-              <ChatThread convo={selectedConvo} onBack={() => setSelectedConvo(null)} />
+              <ChatThread
+                convo={selectedConvo}
+                allMessages={allMessages}
+                setAllMessages={setAllMessages}
+                onBack={() => setSelectedConvo(null)}
+              />
             ) : (
               <div className="p-12 text-center text-sm text-muted-foreground">
                 Select a conversation to start chatting.

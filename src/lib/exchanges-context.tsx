@@ -5,7 +5,7 @@ interface ExchangesContextType {
   exchanges: Exchange[];
   skills: Skill[];
   requestExchange: (skill: Skill) => void;
-  postSkill: (skill: Omit<Skill, "id" | "rating" | "reviewCount" | "distance" | "image" | "instructor"> & { tags: string[] }) => void;
+  postSkill: (skill: Omit<Skill, "id" | "rating" | "reviewCount" | "distance" | "image" | "instructor" | "pricePerHour"> & { tags: string[]; pricePerHour: number }) => void;
 }
 
 const ExchangesContext = createContext<ExchangesContextType | null>(null);
@@ -45,6 +45,7 @@ export function ExchangesProvider({ children }: { children: ReactNode }) {
         distance: "1.2 km",
         duration: data.duration,
         tags: data.tags,
+        pricePerHour: data.pricePerHour,
       },
       ...prev,
     ]);
