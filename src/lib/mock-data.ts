@@ -31,6 +31,24 @@ export interface Skill {
   duration: string;
   tags: string[];
   pricePerHour: number; // 0 = free skill swap, otherwise ₹/hr
+  postedBy?: string; // user id of poster (omitted = community / other mentor)
+  postedAt?: string; // ISO date
+  views?: number;
+  requestCount?: number;
+  status?: "Active" | "Paused";
+}
+
+export interface CompletedSession {
+  id: string;
+  skill: string;
+  partnerId: string; // mentor slug
+  partner: string;
+  partnerAvatar: string;
+  date: string; // ISO
+  durationMin: number;
+  ratingGiven: number | null; // null = needs review
+  ratingReceived: number;
+  notes: string;
 }
 
 export interface Exchange {
@@ -100,7 +118,12 @@ export const AVATARS = {
 };
 
 export const DEMO_CREDENTIALS = {
-  email: "marcus@exchange.demo",
+  email: "prajithaa@exchange.demo",
+  password: "demo1234",
+};
+
+export const DEMO_CREDENTIALS_2 = {
+  email: "aarav@exchange.demo",
   password: "demo1234",
 };
 
@@ -433,3 +456,69 @@ export const mentors: Record<string, Mentor> = {
     reviews: reviews.slice(0, 1),
   },
 };
+
+// ─── Second demo user for cross-account testing ─────────────────
+export const secondUser: User = {
+  id: "u2",
+  name: "Aarav Kumar",
+  avatar: AVATARS.arjun,
+  title: "Full-Stack Engineer · Cloud Native",
+  location: "Hyderabad, India",
+  joinedDate: "May 2023",
+  bio: "Full-stack engineer who loves teaching beginners. 5 years building cloud-native apps across AWS and GCP.",
+  rating: 4.85,
+  reviewCount: 92,
+  skillsExchanged: 28,
+  hoursEarned: 76,
+  communityRating: 4.85,
+  isVerified: true,
+  isOnline: true,
+  skillsOffered: [],
+  skillsNeeded: ["System design", "Rust basics", "Database internals"],
+};
+
+export const allUsers: Record<string, User> = {
+  u1: currentUser,
+  u2: secondUser,
+};
+
+// ─── Seed: a skill posted by Aarav (u2) so Prajithaa sees it ───
+export const seededUserPosts: Skill[] = [
+  {
+    id: "up1", title: "Next.js 15 Production Patterns",
+    description: "Server actions, partial prerendering, edge runtime tradeoffs — patterns I use in production.",
+    category: "Web Dev", level: "Intermediate",
+    image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&h=400&fit=crop",
+    instructor: { name: "Aarav Kumar", avatar: AVATARS.arjun }, rating: 4.8, reviewCount: 31,
+    distance: "2.0 km", duration: "75 min", tags: ["Next.js", "React", "Edge"], pricePerHour: 750,
+    postedBy: "u2", postedAt: "2025-04-02", views: 84, requestCount: 6, status: "Active",
+  },
+  {
+    id: "up2", title: "Hands-on GCP for Backend Devs",
+    description: "Cloud Run, Pub/Sub, Firestore — ship a real backend on GCP without overspending.",
+    category: "DevOps", level: "Beginner",
+    image: "https://images.unsplash.com/photo-1573164713988-8665fc963095?w=600&h=400&fit=crop",
+    instructor: { name: "Aarav Kumar", avatar: AVATARS.arjun }, rating: 4.7, reviewCount: 22,
+    distance: "2.0 km", duration: "60 min", tags: ["GCP", "Cloud Run"], pricePerHour: 600,
+    postedBy: "u2", postedAt: "2025-03-20", views: 51, requestCount: 3, status: "Active",
+  },
+  {
+    id: "up3", title: "Intro to System Design",
+    description: "The mental models you need before tackling FAANG system design rounds.",
+    category: "System Design", level: "Beginner",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&h=400&fit=crop",
+    instructor: { name: "Prajithaa", avatar: AVATARS.priya }, rating: 4.9, reviewCount: 12,
+    distance: "0 km", duration: "60 min", tags: ["System Design", "Architecture"], pricePerHour: 0,
+    postedBy: "u1", postedAt: "2025-03-28", views: 142, requestCount: 11, status: "Active",
+  },
+];
+
+// ─── Past completed sessions (history) ──────────────────────────
+export const completedSessions: CompletedSession[] = [
+  { id: "h1", skill: "Advanced React & TypeScript", partnerId: slug("David Kim"), partner: "David Kim", partnerAvatar: AVATARS.david, date: "2025-04-10", durationMin: 90, ratingGiven: 5, ratingReceived: 5, notes: "Deep dive into server components — actionable takeaways." },
+  { id: "h2", skill: "Docker & Kubernetes Essentials", partnerId: slug("Rohan Desai"), partner: "Rohan Desai", partnerAvatar: AVATARS.rohan, date: "2025-04-05", durationMin: 90, ratingGiven: 5, ratingReceived: 5, notes: "Cleared up HPA + resource requests once and for all." },
+  { id: "h3", skill: "Machine Learning with PyTorch", partnerId: slug("Priya Sharma"), partner: "Priya Sharma", partnerAvatar: AVATARS.priya, date: "2025-03-28", durationMin: 120, ratingGiven: null, ratingReceived: 5, notes: "BatchNorm fix worked. Need to leave a review." },
+  { id: "h4", skill: "SQL Query Optimization", partnerId: slug("Aisha Malik"), partner: "Aisha Malik", partnerAvatar: AVATARS.aisha, date: "2025-03-15", durationMin: 60, ratingGiven: 4, ratingReceived: 5, notes: "Composite index advice cut query time by 40x." },
+  { id: "h5", skill: "Web Security & OWASP Top 10", partnerId: slug("Liam O'Brien"), partner: "Liam O'Brien", partnerAvatar: AVATARS.liam, date: "2025-02-22", durationMin: 75, ratingGiven: 5, ratingReceived: 4, notes: "Thorough OWASP walkthrough with real CVE examples." },
+  { id: "h6", skill: "Design Systems with Figma", partnerId: slug("Sarah Chen"), partner: "Sarah Chen", partnerAvatar: AVATARS.sarah, date: "2025-02-08", durationMin: 60, ratingGiven: null, ratingReceived: 5, notes: "Tokens-first approach clicked. Need to review." },
+];

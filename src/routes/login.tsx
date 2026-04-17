@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { DEMO_CREDENTIALS } from "@/lib/mock-data";
+import { DEMO_CREDENTIALS, DEMO_CREDENTIALS_2 } from "@/lib/mock-data";
 import { Eye, EyeOff, Code2, ArrowLeft, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -146,9 +146,9 @@ function LoginForm({ login, onSuccess }: { login: (e: string, p: string) => { su
     setIsLoading(false);
   };
 
-  const fillDemo = () => {
-    setEmail(DEMO_CREDENTIALS.email);
-    setPassword(DEMO_CREDENTIALS.password);
+  const fillDemo = (which: 1 | 2) => {
+    const c = which === 1 ? DEMO_CREDENTIALS : DEMO_CREDENTIALS_2;
+    setEmail(c.email); setPassword(c.password);
   };
 
   return (
@@ -179,14 +179,21 @@ function LoginForm({ login, onSuccess }: { login: (e: string, p: string) => { su
       </form>
 
       <div className="mt-5 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-4">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Demo credentials</p>
-        <div className="mt-2 space-y-0.5 text-xs">
-          <p className="font-mono text-foreground">{DEMO_CREDENTIALS.email}</p>
-          <p className="font-mono text-foreground">{DEMO_CREDENTIALS.password}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Demo accounts (try cross-account!)</p>
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-md border border-border bg-card p-3">
+            <p className="text-xs font-semibold text-foreground">Prajithaa</p>
+            <p className="mt-1 font-mono text-[11px] text-muted-foreground">{DEMO_CREDENTIALS.email}</p>
+            <p className="font-mono text-[11px] text-muted-foreground">{DEMO_CREDENTIALS.password}</p>
+            <Button onClick={() => fillDemo(1)} variant="outline" size="sm" className="mt-2 w-full text-xs">Use account</Button>
+          </div>
+          <div className="rounded-md border border-border bg-card p-3">
+            <p className="text-xs font-semibold text-foreground">Aarav</p>
+            <p className="mt-1 font-mono text-[11px] text-muted-foreground">{DEMO_CREDENTIALS_2.email}</p>
+            <p className="font-mono text-[11px] text-muted-foreground">{DEMO_CREDENTIALS_2.password}</p>
+            <Button onClick={() => fillDemo(2)} variant="outline" size="sm" className="mt-2 w-full text-xs">Use account</Button>
+          </div>
         </div>
-        <Button onClick={fillDemo} variant="outline" size="sm" className="mt-3 w-full">
-          Auto-fill demo credentials
-        </Button>
       </div>
     </>
   );

@@ -36,8 +36,12 @@ export const Route = createFileRoute("/market")({
 });
 
 function MarketPage() {
-  const { isAuthenticated } = useAuth();
-  const { skills } = useExchanges();
+  const { isAuthenticated, user } = useAuth();
+  const { skills: allSkillsCtx } = useExchanges();
+  const skills = useMemo(
+    () => allSkillsCtx.filter(s => s.postedBy !== user?.id),
+    [allSkillsCtx, user?.id]
+  );
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 200); // DSA: debounce

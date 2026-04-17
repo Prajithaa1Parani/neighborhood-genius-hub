@@ -124,3 +124,16 @@
 7. Open a **mentor profile**, navigate away, come back → instant load = LRU cache hit.
 
 All algorithms live under `src/lib/dsa/` and each file's header comment documents its DSA, complexity, and where it's used.
+
+---
+
+## Update — My Posts & History pages
+
+| DSA | File | Lines | Real-world purpose |
+|-----|------|-------|--------------------|
+| **Quicksort** (`quickSort.ts`) | `src/routes/my-posts.tsx` | ~44-52 | Sort the user's own posts by newest, most-viewed, or most-requested. O(n log n) avg. |
+| **Quicksort** (`quickSort.ts`) | `src/routes/history.tsx` | ~58-61 | Order session history by date descending for chronological grouping. |
+| **Priority Queue / Min-Heap** (`priorityQueue.ts`) | `src/routes/history.tsx` | ~48-56 | Surface "needs review" sessions first. Sessions awaiting review are pushed with score 0; reviewed ones get +1000 plus a recency component, so unreviewed always rises to the top. |
+
+### Cross-account testing
+Two demo accounts (`Prajithaa` / `Aarav`) demonstrate that posts made by user A only appear in user B's Market view, never their own. This is enforced in `src/routes/market.tsx` by filtering `s.postedBy !== user.id`.
