@@ -31,6 +31,24 @@ export interface Skill {
   duration: string;
   tags: string[];
   pricePerHour: number; // 0 = free skill swap, otherwise ₹/hr
+  postedBy: string; // user id of poster
+  postedAt?: string; // ISO date
+  views?: number;
+  requestCount?: number;
+  status?: "Active" | "Paused";
+}
+
+export interface CompletedSession {
+  id: string;
+  skill: string;
+  partnerId: string; // mentor slug
+  partner: string;
+  partnerAvatar: string;
+  date: string; // ISO
+  durationMin: number;
+  ratingGiven: number | null; // null = needs review
+  ratingReceived: number;
+  notes: string;
 }
 
 export interface Exchange {
@@ -100,7 +118,12 @@ export const AVATARS = {
 };
 
 export const DEMO_CREDENTIALS = {
-  email: "marcus@exchange.demo",
+  email: "prajithaa@exchange.demo",
+  password: "demo1234",
+};
+
+export const DEMO_CREDENTIALS_2 = {
+  email: "aarav@exchange.demo",
   password: "demo1234",
 };
 
