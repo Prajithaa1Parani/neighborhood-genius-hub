@@ -69,7 +69,8 @@ export const Route = createFileRoute("/mentor/$mentorId")({
 });
 
 function MentorProfilePage() {
-  const { mentor } = Route.useLoaderData();
+  const loaderData = Route.useLoaderData() as { mentor: Mentor };
+  const mentor = loaderData.mentor;
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -169,7 +170,7 @@ function MentorProfilePage() {
               <p className="eyebrow">What they teach</p>
               <h2 className="mt-1 text-lg font-semibold text-foreground">Skills offered</h2>
               <ul className="mt-4 divide-y divide-border">
-                {mentor.teaches.map((s, i) => (
+                {mentor.teaches.map((s: { title: string; level: string; price: number }, i: number) => (
                   <li key={i} className="flex items-center justify-between gap-4 py-3">
                     <div>
                       <p className="text-sm font-medium text-foreground">{s.title}</p>
@@ -190,7 +191,7 @@ function MentorProfilePage() {
               <p className="eyebrow">Background</p>
               <h2 className="mt-1 text-lg font-semibold text-foreground">Experience</h2>
               <ol className="mt-4 space-y-4 border-l border-border pl-5">
-                {mentor.experience.map((e, i) => (
+                {mentor.experience.map((e: { role: string; company: string; period: string }, i: number) => (
                   <li key={i} className="relative">
                     <span className="absolute -left-[26px] top-1.5 flex h-3 w-3 items-center justify-center rounded-full bg-primary" />
                     <p className="text-sm font-semibold text-foreground">{e.role}</p>
