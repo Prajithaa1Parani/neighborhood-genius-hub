@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MentorMentorIdRouteImport } from './routes/mentor.$mentorId'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -46,6 +47,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MentorMentorIdRoute = MentorMentorIdRouteImport.update({
+  id: '/mentor/$mentorId',
+  path: '/mentor/$mentorId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/market': typeof MarketRoute
   '/profile': typeof ProfileRoute
+  '/mentor/$mentorId': typeof MentorMentorIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/market': typeof MarketRoute
   '/profile': typeof ProfileRoute
+  '/mentor/$mentorId': typeof MentorMentorIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,12 +79,27 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/market': typeof MarketRoute
   '/profile': typeof ProfileRoute
+  '/mentor/$mentorId': typeof MentorMentorIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/chat' | '/dashboard' | '/login' | '/market' | '/profile'
+  fullPaths:
+    | '/'
+    | '/chat'
+    | '/dashboard'
+    | '/login'
+    | '/market'
+    | '/profile'
+    | '/mentor/$mentorId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/chat' | '/dashboard' | '/login' | '/market' | '/profile'
+  to:
+    | '/'
+    | '/chat'
+    | '/dashboard'
+    | '/login'
+    | '/market'
+    | '/profile'
+    | '/mentor/$mentorId'
   id:
     | '__root__'
     | '/'
@@ -85,6 +108,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/market'
     | '/profile'
+    | '/mentor/$mentorId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -94,6 +118,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MarketRoute: typeof MarketRoute
   ProfileRoute: typeof ProfileRoute
+  MentorMentorIdRoute: typeof MentorMentorIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -140,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mentor/$mentorId': {
+      id: '/mentor/$mentorId'
+      path: '/mentor/$mentorId'
+      fullPath: '/mentor/$mentorId'
+      preLoaderRoute: typeof MentorMentorIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -150,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MarketRoute: MarketRoute,
   ProfileRoute: ProfileRoute,
+  MentorMentorIdRoute: MentorMentorIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
