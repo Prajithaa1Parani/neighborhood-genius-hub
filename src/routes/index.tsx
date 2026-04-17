@@ -547,6 +547,53 @@ function LandingPage() {
         </motion.div>
       </section>
 
+      {/* Meet the engineers */}
+      <section id="engineers" className="relative z-10 mx-auto max-w-7xl px-6 pb-24">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mx-auto max-w-2xl text-center">
+          <motion.p variants={fadeUp} className="text-[11px] uppercase tracking-[0.2em] text-blue-300/80">The Network</motion.p>
+          <motion.h2 variants={fadeUp} className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">Meet a few of the engineers.</motion.h2>
+          <motion.p variants={fadeUp} className="mt-4 text-white/60">Verified profiles. Real shipped work. People you'd actually want in your standup.</motion.p>
+        </motion.div>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { name: "Arjun Mehta", role: "Staff Engineer", avatar: AVATARS.arjun, tags: ["System Design", "Go", "Kafka"] },
+            { name: "Priya Sharma", role: "ML Engineer", avatar: AVATARS.priya, tags: ["PyTorch", "MLOps", "RAG"] },
+            { name: "David Kim", role: "Frontend Lead", avatar: AVATARS.david, tags: ["React", "Edge", "TS"] },
+            { name: "Sarah Chen", role: "Infra Architect", avatar: AVATARS.sarah, tags: ["K8s", "Terraform", "AWS"] },
+            { name: "Rohan Desai", role: "DevOps Architect", avatar: AVATARS.rohan, tags: ["CI/CD", "Observability"] },
+            { name: "Liam O'Brien", role: "Security Engineer", avatar: AVATARS.liam, tags: ["AppSec", "Zero-trust"] },
+            { name: "Aisha Khan", role: "Backend Engineer", avatar: AVATARS.aisha, tags: ["Rust", "Postgres", "gRPC"] },
+            { name: "Julian Rossi", role: "Compiler Engineer", avatar: AVATARS.julian, tags: ["LLVM", "WASM"] },
+          ].map((p) => (
+            <motion.div
+              key={p.name}
+              variants={fadeUp}
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.06] hover:shadow-2xl hover:shadow-blue-500/10"
+            >
+              <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-blue-500/30 to-fuchsia-500/20 blur-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <div className="relative flex items-center gap-3">
+                <img src={p.avatar} alt={p.name} className="h-14 w-14 rounded-full object-cover ring-2 ring-white/10" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-white">{p.name}</p>
+                  <p className="truncate text-xs text-white/55">{p.role}</p>
+                </div>
+              </div>
+              <div className="relative mt-4 flex flex-wrap gap-1.5">
+                {p.tags.map((t) => (
+                  <span key={t} className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] text-white/65 ring-1 ring-white/10">{t}</span>
+                ))}
+              </div>
+              <div className="relative mt-5 flex items-center justify-between">
+                <div className="flex items-center gap-1 text-[11px] text-amber-300">
+                  <Star className="h-3 w-3 fill-current" /> 4.9
+                </div>
+                <span className="text-[11px] font-medium text-blue-300 opacity-0 transition-opacity group-hover:opacity-100">View profile →</span>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
       {/* Testimonials */}
       <section id="testimonials" className="relative z-10 mx-auto max-w-7xl px-6 pb-24">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mx-auto max-w-2xl text-center">
