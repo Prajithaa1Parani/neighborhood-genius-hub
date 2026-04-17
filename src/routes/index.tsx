@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion, useInView, useMotionValue, useSpring, useTransform, animate } from "framer-motion";
+import { motion, useInView, useMotionValue, useSpring, useTransform, animate, useScroll } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
   Code2, Sparkles, MessageSquare, ShieldCheck, ArrowRight, Star, Zap, Network,
   GitBranch, Cpu, Layers, Terminal, CheckCircle2, Github, Twitter, Linkedin,
+  ChevronDown, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
