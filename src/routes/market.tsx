@@ -82,9 +82,12 @@ function MarketPage() {
       // Intersect trie hits across tokens
       for (const tok of tokens) {
         const hits = trie.searchPrefix(tok);
-        candidateIds = candidateIds
-          ? new Set([...candidateIds].filter(x => hits.has(x)))
-          : new Set(hits);
+        if (candidateIds === null) {
+          candidateIds = new Set<string>(hits);
+        } else {
+          const prev: Set<string> = candidateIds;
+          candidateIds = new Set<string>([...prev].filter((x: string) => hits.has(x)));
+        }
       }
     }
 
