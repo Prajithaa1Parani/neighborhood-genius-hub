@@ -1,50 +1,51 @@
 
-## Where the landing page is
+## Why you can't see the landing page
 
-It already lives at `/` (you're on `/login` right now — visit the root URL to see it). But I'll take it to the next level: more cinematic, more animated, more "expensive."
+It exists at `/` (root URL) and is fully built — animated aurora hero, marquee logos, live network SVG, bento features, typing terminal, count-up stats, testimonials, footer. The problem is **navigation**: you're stuck on `/login` because:
+1. There's no visible "back to home" link from `/login`
+2. Once authenticated, `/login` auto-redirects to `/dashboard`, skipping `/`
+3. The sidebar inside the app has no link back to the landing page
 
-## Plan: Cinematic upgrade to the landing page
+## Plan: Make the landing page reachable + elevate it further
 
-### 1. Hero — magazine-grade
-- **Animated aurora mesh** background (multi-layer conic gradients that slowly rotate) + denser animated grid + parallax mouse-follow on the orbs
-- **Live status pill** with pulsing dot ("847 engineers online")
-- **Split headline** with per-word stagger reveal + animated gradient sweep across "Level up together"
-- **Trust microcopy** under CTAs ("No credit card · 60-second signup · 3,800 verified engineers")
-- **Floating preview card** (right side, desktop): a tilted glassmorphic mock of a "skill match" card that subtly drifts — gives instant product peek
+### 1. Fix discoverability (the real bug)
+- Add a **"← Back to home"** link at the top-left of `/login` that routes to `/`
+- Add a **"Home"** / logo click in the app sidebar (`AppLayout.tsx`) that routes to `/`
+- Keep `/login` redirect to `/dashboard` only when user submits — not on mount if they came from `/`
 
-### 2. New: Marquee logo strip
-Infinite horizontal scrolling row of company logos (Stripe, Vercel, OpenAI, Databricks, Figma, Netflix, Airbnb, Datadog) — duplicated for seamless loop. Replaces the static row.
+### 2. Elevate the landing page to truly "grand & rich"
+Even though it's already cinematic, push it further:
 
-### 3. New: "Live network" visual section
-Animated SVG showing nodes (engineers) connecting with pulse lines — represents the exchange network. Pure CSS/SVG with framer-motion — no library.
+- **Hero upgrades**
+  - Add a **3D-tilt** effect on the floating preview card (mouse-follow rotateX/rotateY via framer-motion)
+  - Add a **spotlight cursor** glow that follows the mouse across the hero
+  - Replace the static "847 engineers online" pill with a **live ticker** that changes numbers every few seconds
+  - Add **scroll-indicator** chevron at the bottom of hero with bounce animation
 
-### 4. Features — premium cards
-- Bento-grid layout (2 large + 4 small cards instead of 3 equal)
-- Each card: animated gradient border on hover, icon with subtle float, mini-illustration inside (e.g., chat bubble preview, skill tag chips, verified badge)
+- **New section: "Skills in motion"** (between marquee and features)
+  - Horizontal scrolling row of large skill tag chips (System Design, Kubernetes, ML Ops, etc.) that scroll opposite direction to the logo marquee — creates depth
 
-### 5. New: "Built by engineers, for engineers" code panel
-Dark terminal-style card showing a faux API snippet (`exchange.match({ skill: "system-design" })`) with syntax highlighting + animated typing effect
+- **Bento grid polish**
+  - Add **animated gradient borders** that rotate around each card on hover (conic-gradient mask trick)
+  - Add **mini-charts** inside one of the small cards (animated SVG sparkline)
 
-### 6. Stats — animated count-up
-Numbers count from 0 → final value when scrolled into view (using framer-motion `useInView` + `animate`)
+- **New section: "Meet the engineers"** (before testimonials)
+  - 4-column grid of avatar cards from `public/avatars/` with name, role, specialty tags
+  - Hover lifts card with shadow + reveals "View profile" button
 
-### 7. Testimonials — auto-rotating carousel
-3 cards visible, gentle horizontal auto-scroll on hover-pause
+- **Pricing teaser** (new section, before final CTA)
+  - 3 plan cards (Free / Pro $19 / Team $49) with checkmark feature lists, "Most popular" ribbon on Pro
 
-### 8. Final CTA — premium gradient panel
-Add animated noise texture overlay + subtle shimmer sweep across the headline
+- **Final CTA upgrade**
+  - Add **animated noise texture** + **glowing orbit ring** around the headline
+  - Two CTAs: "Start free" + "Talk to sales"
 
-### 9. Footer — expanded
-4-column footer (Product / Company / Resources / Legal) with social icons — feels like a real company
+- **Sticky top nav** with **scroll-blur** (backdrop-filter increases with scroll)
 
-### Style additions (`src/styles.css`)
-- `@keyframes aurora` (slow rotate)
-- `@keyframes marquee` (linear infinite scroll)
-- `@keyframes shimmer-sweep`
-- `.text-shimmer` utility (animated gradient text mask)
-- `.noise` utility (subtle SVG noise overlay)
+### 3. Files to edit
+- `src/routes/index.tsx` — add new sections (Skills marquee #2, Engineers grid, Pricing, hero spotlight, scroll indicator)
+- `src/routes/login.tsx` — add "Back to home" link
+- `src/components/AppLayout.tsx` — make sidebar logo link to `/`
+- `src/styles.css` — add `@keyframes` for spotlight, orbit-ring, scroll-bounce; add `.spotlight` and `.tilt-card` utilities
 
-### Files
-**Edit only**: `src/routes/index.tsx` (full rewrite of landing), `src/styles.css` (new keyframes + utilities)
-
-No new dependencies. Framer Motion is already installed.
+No new dependencies. After this, the landing page will be unmistakably visible and significantly richer.
