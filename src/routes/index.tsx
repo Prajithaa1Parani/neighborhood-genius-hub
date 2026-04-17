@@ -29,6 +29,22 @@ const fadeUp = {
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } };
 
 const LOGOS = ["STRIPE", "VERCEL", "OPENAI", "DATABRICKS", "FIGMA", "NETFLIX", "AIRBNB", "DATADOG", "LINEAR", "NOTION"];
+const SKILL_CHIPS = [
+  "System Design", "Kubernetes", "ML Ops", "Rust", "Distributed Systems", "PyTorch",
+  "GraphQL", "Postgres tuning", "Compilers", "WebAssembly", "Kafka", "CRDTs",
+  "Zero-trust security", "gRPC", "Observability", "Edge computing", "Vector DBs",
+];
+
+function LiveTicker() {
+  const [n, setN] = useState(847);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setN((v) => Math.max(820, Math.min(910, v + Math.floor(Math.random() * 7) - 3)));
+    }, 2200);
+    return () => clearInterval(id);
+  }, []);
+  return <span className="tabular-nums">{n}</span>;
+}
 
 function CountUp({ to, suffix = "", duration = 1.6 }: { to: number; suffix?: string; duration?: number }) {
   const ref = useRef<HTMLSpanElement>(null);
