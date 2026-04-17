@@ -191,14 +191,15 @@ function LandingPage() {
 
       {/* Hero */}
       <section ref={heroRef} className="relative z-10 mx-auto max-w-7xl px-6 pt-12 pb-24 md:pt-20 md:pb-28">
-        <div className="grid items-center gap-10 lg:grid-cols-12">
+        <div className="pointer-events-none absolute inset-0 spotlight" />
+        <div className="relative grid items-center gap-10 lg:grid-cols-12">
           <motion.div initial="hidden" animate="visible" variants={stagger} className="lg:col-span-7">
             <motion.div variants={fadeUp} className="mb-6 inline-flex items-center gap-2 rounded-full glass px-3.5 py-1.5 text-xs font-medium text-white/85">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-pulse-ring" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
               </span>
-              847 engineers online · 24 cities
+              <LiveTicker /> engineers online · 24 cities
             </motion.div>
 
             <h1 className="text-balance text-5xl font-semibold tracking-tight md:text-7xl">
@@ -248,10 +249,10 @@ function LandingPage() {
             </motion.p>
           </motion.div>
 
-          {/* Floating preview card */}
+          {/* Floating preview card with 3D tilt */}
           <motion.div
-            initial={{ opacity: 0, y: 40, rotate: -3 }}
-            animate={{ opacity: 1, y: 0, rotate: -3 }}
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="relative hidden lg:col-span-5 lg:block"
           >
@@ -260,36 +261,59 @@ function LandingPage() {
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
               className="relative mx-auto max-w-md"
             >
-              <div className="absolute -inset-1 rounded-3xl bg-gradient-to-br from-blue-500/40 via-fuchsia-500/30 to-cyan-400/40 blur-xl" />
-              <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-[#0a0f1f]/90 p-6 shadow-2xl backdrop-blur-xl">
-                <div className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[10px] font-medium text-emerald-300 ring-1 ring-emerald-400/30">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> NEW MATCH
-                  </span>
-                  <span className="text-[10px] uppercase tracking-widest text-white/40">98% fit</span>
-                </div>
-                <div className="mt-5 flex items-center gap-3">
-                  <img src={AVATARS.arjun} alt="Arjun Mehta" className="h-12 w-12 rounded-full object-cover ring-2 ring-white/10" />
-                  <div>
-                    <p className="text-sm font-semibold text-white">Arjun Mehta</p>
-                    <p className="text-xs text-white/50">Staff Engineer · Distributed Systems</p>
+              <div ref={tiltRef} className="tilt-card relative">
+                <div className="absolute -inset-1 rounded-3xl bg-gradient-to-br from-blue-500/40 via-fuchsia-500/30 to-cyan-400/40 blur-xl" />
+                <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-[#0a0f1f]/90 p-6 shadow-2xl backdrop-blur-xl">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[10px] font-medium text-emerald-300 ring-1 ring-emerald-400/30">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> NEW MATCH
+                    </span>
+                    <span className="text-[10px] uppercase tracking-widest text-white/40">98% fit</span>
                   </div>
-                </div>
-                <p className="mt-4 text-xs text-white/60">Offers <span className="text-white/90">System Design</span> in exchange for <span className="text-white/90">PyTorch fundamentals</span>.</p>
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {["System Design", "Go", "Kafka", "K8s"].map((t) => (
-                    <span key={t} className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] text-white/70 ring-1 ring-white/10">{t}</span>
-                  ))}
-                </div>
-                <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-4">
-                  <div className="flex items-center gap-1 text-xs text-amber-300">
-                    <Star className="h-3 w-3 fill-current" /> 4.92 · 87 reviews
+                  <div className="mt-5 flex items-center gap-3">
+                    <img src={AVATARS.arjun} alt="Arjun Mehta" className="h-12 w-12 rounded-full object-cover ring-2 ring-white/10" />
+                    <div>
+                      <p className="text-sm font-semibold text-white">Arjun Mehta</p>
+                      <p className="text-xs text-white/50">Staff Engineer · Distributed Systems</p>
+                    </div>
                   </div>
-                  <Button size="sm" className="h-7 bg-white text-[11px] text-slate-900 hover:bg-white/90">Request →</Button>
+                  <p className="mt-4 text-xs text-white/60">Offers <span className="text-white/90">System Design</span> in exchange for <span className="text-white/90">PyTorch fundamentals</span>.</p>
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {["System Design", "Go", "Kafka", "K8s"].map((t) => (
+                      <span key={t} className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] text-white/70 ring-1 ring-white/10">{t}</span>
+                    ))}
+                  </div>
+                  <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-4">
+                    <div className="flex items-center gap-1 text-xs text-amber-300">
+                      <Star className="h-3 w-3 fill-current" /> 4.92 · 87 reviews
+                    </div>
+                    <Button size="sm" className="h-7 bg-white text-[11px] text-slate-900 hover:bg-white/90">Request →</Button>
+                  </div>
                 </div>
               </div>
             </motion.div>
           </motion.div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div className="mt-16 hidden justify-center md:flex">
+          <div className="flex flex-col items-center gap-1 text-[10px] uppercase tracking-[0.25em] text-white/40">
+            <span>Scroll</span>
+            <ChevronDown className="h-4 w-4 animate-scroll-bounce" />
+          </div>
+        </div>
+      </section>
+
+      {/* Skills in motion — reverse marquee */}
+      <section className="relative z-10 border-y border-white/5 bg-white/[0.01] py-10 marquee-pause">
+        <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+          <div className="marquee-track-reverse flex w-max gap-3 whitespace-nowrap px-4">
+            {[...SKILL_CHIPS, ...SKILL_CHIPS].map((s, i) => (
+              <span key={i} className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/75 backdrop-blur transition-colors hover:border-blue-400/40 hover:text-white">
+                {s}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 
