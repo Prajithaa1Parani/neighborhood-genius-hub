@@ -623,32 +623,92 @@ function LandingPage() {
         </motion.div>
       </section>
 
+      {/* Pricing teaser */}
+      <section id="pricing" className="relative z-10 mx-auto max-w-7xl px-6 pb-24">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mx-auto max-w-2xl text-center">
+          <motion.p variants={fadeUp} className="text-[11px] uppercase tracking-[0.2em] text-blue-300/80">Pricing</motion.p>
+          <motion.h2 variants={fadeUp} className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">Simple plans. Outsized leverage.</motion.h2>
+          <motion.p variants={fadeUp} className="mt-4 text-white/60">Start free. Upgrade when you want priority matching and team features.</motion.p>
+        </motion.div>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mt-14 grid gap-5 md:grid-cols-3">
+          {[
+            { name: "Free", price: "0", per: "forever", desc: "Everything you need to start trading skills.", popular: false,
+              features: ["1 active exchange", "Public profile", "AI-assisted chat (limited)", "Community support"] },
+            { name: "Pro", price: "19", per: "per month", desc: "For engineers serious about leveling up fast.", popular: true,
+              features: ["Unlimited exchanges", "Priority matching", "Unlimited AI chat", "Verified badge", "Calendar sync"] },
+            { name: "Team", price: "49", per: "per seat / mo", desc: "For engineering orgs investing in growth.", popular: false,
+              features: ["Everything in Pro", "Team analytics dashboard", "SSO + SAML", "Dedicated success manager", "Custom skill taxonomy"] },
+          ].map((p) => (
+            <motion.div
+              key={p.name}
+              variants={fadeUp}
+              className={`relative overflow-hidden rounded-2xl border p-7 transition-all duration-300 hover:-translate-y-1 ${
+                p.popular
+                  ? "border-blue-400/40 bg-gradient-to-b from-blue-500/10 to-fuchsia-500/5 shadow-2xl shadow-blue-500/20"
+                  : "border-white/10 bg-white/[0.03] hover:border-white/20"
+              }`}
+            >
+              {p.popular && (
+                <div className="absolute right-5 top-5 rounded-full bg-gradient-to-r from-blue-500 to-fuchsia-500 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg">
+                  Most popular
+                </div>
+              )}
+              <p className="text-sm font-semibold text-white">{p.name}</p>
+              <p className="mt-1 text-xs text-white/55">{p.desc}</p>
+              <div className="mt-6 flex items-baseline gap-1.5">
+                <span className="text-5xl font-semibold tracking-tight text-white">${p.price}</span>
+                <span className="text-xs text-white/50">{p.per}</span>
+              </div>
+              <Link to="/login">
+                <Button className={`mt-6 w-full ${p.popular ? "bg-white text-slate-900 hover:bg-white/90" : "bg-white/5 text-white ring-1 ring-white/15 hover:bg-white/10"}`}>
+                  {p.name === "Free" ? "Start free" : `Choose ${p.name}`}
+                </Button>
+              </Link>
+              <ul className="mt-7 space-y-2.5 text-sm text-white/75">
+                {p.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5">
+                    <span className={`mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full ${p.popular ? "bg-blue-400/20 text-blue-300" : "bg-white/10 text-white/70"}`}>
+                      <Check className="h-3 w-3" />
+                    </span>
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
       {/* Final CTA */}
       <section className="relative z-10 mx-auto max-w-7xl px-6 pb-24">
         <motion.div
           initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }}
-          className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-12 md:p-16"
+          className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-12 md:p-20"
         >
           <div className="absolute inset-0 grid-bg opacity-20" />
           <div className="absolute inset-0 noise" />
-          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/20 blur-3xl" />
+          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/20 blur-3xl animate-float-slow" />
+          <div className="absolute -left-20 -bottom-20 h-72 w-72 rounded-full bg-fuchsia-400/30 blur-3xl animate-float-slower" />
           <div className="relative mx-auto max-w-2xl text-center">
-            <h2 className="text-balance text-4xl font-semibold tracking-tight text-white md:text-5xl">
-              <span className="text-shimmer">Your next skill is one exchange away.</span>
-            </h2>
-            <p className="mt-4 text-white/80">Join 3,800+ engineers trading the kind of expertise you can't get from a course.</p>
+            <div className="orbit-ring relative mx-auto inline-block">
+              <h2 className="relative text-balance text-4xl font-semibold tracking-tight text-white md:text-5xl">
+                <span className="text-shimmer">Your next skill is one exchange away.</span>
+              </h2>
+            </div>
+            <p className="mt-6 text-white/80">Join 3,800+ engineers trading the kind of expertise you can't get from a course.</p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link to="/login">
-                <Button size="lg" className="h-12 bg-white px-7 text-slate-900 hover:bg-white/90">
-                  Create your account <ArrowRight className="h-4 w-4" />
+                <Button size="lg" className="h-12 bg-white px-7 text-slate-900 hover:bg-white/90 shadow-2xl">
+                  Start free <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
               <Link to="/login">
                 <Button size="lg" variant="outline" className="h-12 border-white/30 bg-transparent px-7 text-white hover:bg-white/10 hover:text-white">
-                  I already have an account
+                  Talk to sales
                 </Button>
               </Link>
             </div>
+            <p className="mt-5 text-xs text-white/55">No credit card · Cancel anytime · 60-second signup</p>
           </div>
         </motion.div>
       </section>
