@@ -97,6 +97,7 @@ function TypingCode() {
 function LandingPage() {
   const { isAuthenticated } = useAuth();
   const heroRef = useRef<HTMLDivElement>(null);
+  const tiltRef = useRef<HTMLDivElement>(null);
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
   const sx = useSpring(mx, { stiffness: 60, damping: 20 });
@@ -106,11 +107,31 @@ function LandingPage() {
   const orb2X = useTransform(sx, (v) => v * -45);
   const orb2Y = useTransform(sy, (v) => v * -25);
 
+  const { scrollY } = useScroll();
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => scrollY.on("change", (v) => setScrolled(v > 24)), [scrollY]);
+
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       const w = window.innerWidth, h = window.innerHeight;
       mx.set((e.clientX - w / 2) / (w / 2));
       my.set((e.clientY - h / 2) / (h / 2));
+      // spotlight position on hero
+      if (heroRef.current) {
+        const r = heroRef.current.getBoundingClientRect();
+        heroRef.current.style.setProperty("--mx", `${e.clientX - r.left}px`);
+        heroRef.current.style.setProperty("--my", `${e.clientY - r.top}px`);
+      }
+      // tilt card
+      if (tiltRef.current) {
+        const r = tiltRef.current.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        const rx = ((e.clientY - cy) / r.height) * -8;
+        const ry = ((e.clientX - cx) / r.width) * 10;
+        tiltRef.current.style.setProperty("--rx", `${rx}deg`);
+        tiltRef.current.style.setProperty("--ry", `${ry}deg`);
+      }
     };
     window.addEventListener("mousemove", onMove);
     return () => window.removeEventListener("mousemove", onMove);
@@ -131,8 +152,8 @@ function LandingPage() {
         <div className="absolute inset-0 noise" />
       </div>
 
-      {/* Nav */}
-      <nav className="relative z-30">
+      {/* Sticky nav */}
+      <nav className={`sticky top-0 z-30 transition-all duration-300 ${scrolled ? "bg-[#050813]/75 backdrop-blur-xl border-b border-white/10" : "bg-transparent"}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link to="/" className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30">
