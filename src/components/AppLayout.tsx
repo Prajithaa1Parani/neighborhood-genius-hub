@@ -159,6 +159,7 @@ function AppSidebar() {
   const location = useLocation();
   const pathname = location.pathname;
   const { user, logout } = useAuth();
+  const { pendingIncomingCount } = useExchanges();
   const navigate = useNavigate();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -193,12 +194,18 @@ function AppSidebar() {
             <SidebarMenu>
               {navItems.map(({ to, icon: Icon, label }) => {
                 const isActive = pathname === to;
+                const showBadge = to === "/requests" && pendingIncomingCount > 0;
                 return (
                   <SidebarMenuItem key={to}>
                     <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
                       <Link to={to}>
                         <Icon className="h-4 w-4" />
                         <span>{label}</span>
+                        {showBadge && (
+                          <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
+                            {pendingIncomingCount}
+                          </span>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
