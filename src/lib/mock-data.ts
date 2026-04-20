@@ -60,6 +60,21 @@ export interface Exchange {
   progress: number;
 }
 
+export interface ExchangeRequest {
+  id: string;
+  skillId: string;
+  skillTitle: string;
+  fromUserId: string;
+  fromUserName: string;
+  fromUserAvatar: string;
+  toUserId: string;
+  toUserName: string;
+  toUserAvatar: string;
+  status: "Pending" | "Accepted" | "Declined";
+  createdAt: string; // ISO
+  message?: string;
+}
+
 export interface ChatConversation {
   id: string;
   user: { name: string; avatar: string; isOnline: boolean; specialty: string };
@@ -510,6 +525,24 @@ export const seededUserPosts: Skill[] = [
     instructor: { name: "Prajithaa", avatar: AVATARS.priya }, rating: 4.9, reviewCount: 12,
     distance: "0 km", duration: "60 min", tags: ["System Design", "Architecture"], pricePerHour: 0,
     postedBy: "u1", postedAt: "2025-03-28", views: 142, requestCount: 11, status: "Active",
+  },
+];
+
+// ─── Seed: one pending incoming request for Prajithaa from Aarav ───
+export const seededRequests: ExchangeRequest[] = [
+  {
+    id: "req-seed-1",
+    skillId: "s1",
+    skillTitle: "System Design Interviews",
+    fromUserId: "u2",
+    fromUserName: "Aarav Kumar",
+    fromUserAvatar: AVATARS.arjun,
+    toUserId: "u1",
+    toUserName: "Prajithaa",
+    toUserAvatar: AVATARS.priya,
+    status: "Pending",
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+    message: "Would love a 90-min walkthrough on sharding strategies.",
   },
 ];
 
