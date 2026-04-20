@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MyPostsRouteImport } from './routes/my-posts'
 import { Route as MarketRouteImport } from './routes/market'
@@ -19,6 +20,11 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MentorMentorIdRouteImport } from './routes/mentor.$mentorId'
 
+const RequestsRoute = RequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/market': typeof MarketRoute
   '/my-posts': typeof MyPostsRoute
   '/profile': typeof ProfileRoute
+  '/requests': typeof RequestsRoute
   '/mentor/$mentorId': typeof MentorMentorIdRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/market': typeof MarketRoute
   '/my-posts': typeof MyPostsRoute
   '/profile': typeof ProfileRoute
+  '/requests': typeof RequestsRoute
   '/mentor/$mentorId': typeof MentorMentorIdRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/market': typeof MarketRoute
   '/my-posts': typeof MyPostsRoute
   '/profile': typeof ProfileRoute
+  '/requests': typeof RequestsRoute
   '/mentor/$mentorId': typeof MentorMentorIdRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/market'
     | '/my-posts'
     | '/profile'
+    | '/requests'
     | '/mentor/$mentorId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/market'
     | '/my-posts'
     | '/profile'
+    | '/requests'
     | '/mentor/$mentorId'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/market'
     | '/my-posts'
     | '/profile'
+    | '/requests'
     | '/mentor/$mentorId'
   fileRoutesById: FileRoutesById
 }
@@ -144,11 +156,19 @@ export interface RootRouteChildren {
   MarketRoute: typeof MarketRoute
   MyPostsRoute: typeof MyPostsRoute
   ProfileRoute: typeof ProfileRoute
+  RequestsRoute: typeof RequestsRoute
   MentorMentorIdRoute: typeof MentorMentorIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/requests': {
+      id: '/requests'
+      path: '/requests'
+      fullPath: '/requests'
+      preLoaderRoute: typeof RequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketRoute: MarketRoute,
   MyPostsRoute: MyPostsRoute,
   ProfileRoute: ProfileRoute,
+  RequestsRoute: RequestsRoute,
   MentorMentorIdRoute: MentorMentorIdRoute,
 }
 export const routeTree = rootRouteImport

@@ -6,8 +6,9 @@
 
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { LayoutGrid, Store, MessageCircle, UserCircle, Bell, Code2, LogOut, CheckCheck, Trash2, FileText, History } from "lucide-react";
+import { LayoutGrid, Store, MessageCircle, UserCircle, Bell, Code2, LogOut, CheckCheck, Trash2, FileText, History, Inbox } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { useExchanges } from "@/lib/exchanges-context";
 import { notifications as initialNotifications } from "@/lib/mock-data";
 import { PriorityQueue } from "@/lib/dsa";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -33,6 +34,7 @@ const navItems = [
   { to: "/dashboard" as const, icon: LayoutGrid, label: "Dashboard" },
   { to: "/market" as const, icon: Store, label: "Market" },
   { to: "/my-posts" as const, icon: FileText, label: "My Posts" },
+  { to: "/requests" as const, icon: Inbox, label: "Requests" },
   { to: "/history" as const, icon: History, label: "History" },
   { to: "/chat" as const, icon: MessageCircle, label: "Chat" },
   { to: "/profile" as const, icon: UserCircle, label: "Profile" },
@@ -157,6 +159,7 @@ function AppSidebar() {
   const location = useLocation();
   const pathname = location.pathname;
   const { user, logout } = useAuth();
+  const { pendingIncomingCount } = useExchanges();
   const navigate = useNavigate();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -191,12 +194,18 @@ function AppSidebar() {
             <SidebarMenu>
               {navItems.map(({ to, icon: Icon, label }) => {
                 const isActive = pathname === to;
+                const showBadge = to === "/requests" && pendingIncomingCount > 0;
                 return (
                   <SidebarMenuItem key={to}>
                     <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
                       <Link to={to}>
                         <Icon className="h-4 w-4" />
                         <span>{label}</span>
+                        {showBadge && (
+                          <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
+                            {pendingIncomingCount}
+                          </span>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
