@@ -1,39 +1,58 @@
 
 
-## Plan: My Posts page, session history, second demo user
+## Plan: Functional exchange requests with accept/decline flow
 
-### 1. "My Posts" — separate from Market
-- New route `src/routes/my-posts.tsx` — lists skills posted by current user
-- Add `postedBy: string` (user id) to `Skill` type in `mock-data.ts`
-- Update `postSkill` in `exchanges-context.tsx` to stamp `postedBy: currentUser.id`
-- In `market.tsx`: filter out skills where `postedBy === currentUser.id` (you can't request your own skill)
-- Add **"My Posts"** sidebar item in `AppLayout.tsx` (icon: `FileText` or `Briefcase`)
-- My Posts page shows: posted skills as cards with edit/delete + view count + request count + status badge
+### Problem
+Currently `requestExchange` just adds to local state of the requester. The recipient (post owner) never sees the request. Need a shared request system.
 
-### 2. Session History
-- New route `src/routes/history.tsx` — past completed exchanges
-- Add `completedExchanges` array to `mock-data.ts` (5-6 mock past sessions: skill, partner, date, duration, rating given, rating received, notes)
-- Add **"History"** sidebar item (icon: `History`)
-- Page layout: timeline-style list grouped by month, each entry = card with partner avatar (links to mentor profile), skill name, date, duration, both ratings, "Leave review" if not yet rated
-- Stats header: total sessions, total hours, avg rating
+### Solution
 
-### 3. Second demo user (cross-account testing)
-- In `mock-data.ts`: add a second user `Aarav Kumar` with own id, avatar, skills
-- Export `DEMO_CREDENTIALS_2 = { email: "aarav@exchange.demo", password: "demo1234" }`
-- Update `auth-context.tsx` `login()` to check both credential pairs and set the matching user
-- Update `login.tsx` demo credentials box to show **both** accounts side-by-side with "Auto-fill" buttons for each
-- Pre-seed one mock skill posted by Aarav so when you log in as Prajithaa you see Aarav's post in Market (and vice versa)
+**1. New `Request` type in `mock-data.ts`:**
+```ts
+type ExchangeRequest = {
+  id: string;
+  skillId: string;
+  skillTitle: string;
+  fromUserId: string;
+  fromUserName: string;
+  fromUserAvatar: string;
+  toUserId: string;        // post owner
+  toUserName: string;
+  status: "Pending" | "Accepted" | "Declined";
+  createdAt: string;
+  message?: string;
+}
+```
 
-### 4. DSA touch (for the viva)
-- Use existing `quickSort` in My Posts (sort by date/views) and History (sort by date)
-- Use existing `priorityQueue` in History to surface "needs review" sessions first
-- Add comment headers in both new files documenting which DSA powers what
+**2. Update `exchanges-context.tsx`:**
+- Add `requests: ExchangeRequest[]` to context state (shared across both demo users via module-level store so cross-account works in same session — use a simple in-memory store outside the provider)
+- `requestExchange(skill)` → create a Pending request (don't auto-create exchange anymore)
+- New `acceptRequest(id)` → mark Accepted + create Exchange + add notification
+- New `declineRequest(id)` → mark Declined
+- Expose `incomingRequests` (where `toUserId === currentUser.id` && Pending) and `outgoingRequests` (where `fromUserId === currentUser.id`)
 
-### 5. Files
+**3. New route `src/routes/requests.tsx`:**
+- Two tabs: **Incoming** (accept/decline buttons) and **Outgoing** (status badges)
+- Empty states for both
+- Uses **Priority Queue** DSA to surface oldest pending first (FIFO fairness) — add comment header
 
-**Create**: `src/routes/my-posts.tsx`, `src/routes/history.tsx`
+**4. Sidebar item** in `AppLayout.tsx`: "Requests" with `Inbox` icon + **unread count badge** (number of incoming Pending)
 
-**Edit**: `src/lib/mock-data.ts` (add user 2, postedBy field, completedExchanges, prices already done), `src/lib/auth-context.tsx` (multi-user login), `src/lib/exchanges-context.tsx` (stamp postedBy, expose completedExchanges), `src/routes/market.tsx` (filter own posts), `src/routes/login.tsx` (show 2 demo accounts), `src/components/AppLayout.tsx` (2 new sidebar items), `DSA_CONCEPTS.md` (note new usages)
+**5. Notifications integration:**
+- When a new incoming request arrives, push a notification ("Aarav requested *Concurrency in Go*")
+- When your outgoing request is accepted/declined, push a notification
+
+**6. Update `SkillCard.tsx` toast:**
+- Change from "Exchange requested" to "Request sent — waiting for [name] to accept"
+
+**7. Cross-account in-memory store:**
+Since both demo users live in the same browser session, store requests in a module-level array (`let requestStore: ExchangeRequest[] = []`) outside the provider with a simple subscription mechanism (`useSyncExternalStore` or a force-rerender via custom event). This way, when Aarav requests something and you log out → log in as Prajithaa, the request is still there.
+
+### Files
+
+**Create**: `src/routes/requests.tsx`
+
+**Edit**: `src/lib/mock-data.ts` (add `ExchangeRequest` type + seed 1 incoming request for Prajithaa from Aarav so it's visible immediately), `src/lib/exchanges-context.tsx` (request store + accept/decline + notifications hook), `src/components/AppLayout.tsx` (sidebar + notification triggers from requests), `src/components/SkillCard.tsx` (toast wording), `DSA_CONCEPTS.md` (add priority queue usage for requests)
 
 No new dependencies.
 
