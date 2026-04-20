@@ -20,10 +20,14 @@ export function SkillCard({ skill }: { skill: Skill }) {
   const mid = mentorSlug(skill.instructor.name);
 
   const handleRequest = () => {
-    requestExchange(skill);
-    toast.success(`Exchange requested with ${skill.instructor.name}`, {
-      description: skill.title,
-    });
+    const result = requestExchange(skill);
+    if (result.ok) {
+      toast.success(`Request sent to ${skill.instructor.name}`, {
+        description: `Waiting for them to accept · ${skill.title}`,
+      });
+    } else {
+      toast.error("Couldn't send request", { description: result.reason });
+    }
   };
 
   return (
