@@ -377,40 +377,93 @@ function LandingPage() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="relative">
-            <div className="relative aspect-square w-full overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0a0f1f] to-[#070b1a] p-6">
-              <svg viewBox="0 0 400 400" className="h-full w-full">
-                <defs>
-                  <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.6" />
-                    <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
-                  </radialGradient>
-                </defs>
-                {/* connecting lines */}
-                {[
-                  ["200,200", "80,90"], ["200,200", "320,80"], ["200,200", "340,260"],
-                  ["200,200", "70,300"], ["200,200", "210,60"], ["200,200", "60,200"],
-                  ["80,90", "320,80"], ["320,80", "340,260"], ["70,300", "340,260"],
-                ].map(([a, b], i) => {
-                  const [x1, y1] = a.split(",").map(Number);
-                  const [x2, y2] = b.split(",").map(Number);
-                  return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(96,165,250,0.35)" strokeWidth="1.2" className="animate-dash-flow" />;
-                })}
-                {[
-                  { x: 200, y: 200, r: 26, c: "#3b82f6", label: "You" },
-                  { x: 80, y: 90, r: 18, c: "#8b5cf6" },
-                  { x: 320, y: 80, r: 16, c: "#06b6d4" },
-                  { x: 340, y: 260, r: 20, c: "#ec4899" },
-                  { x: 70, y: 300, r: 17, c: "#10b981" },
-                  { x: 210, y: 60, r: 14, c: "#f59e0b" },
-                  { x: 60, y: 200, r: 15, c: "#6366f1" },
-                ].map((n, i) => (
-                  <g key={i}>
-                    <circle cx={n.x} cy={n.y} r={n.r + 12} fill="url(#nodeGlow)" />
-                    <circle cx={n.x} cy={n.y} r={n.r} fill={n.c} fillOpacity="0.85" stroke="white" strokeOpacity="0.4" strokeWidth="1.5" />
-                    {n.label && <text x={n.x} y={n.y + 4} textAnchor="middle" className="fill-white text-[10px] font-semibold">{n.label}</text>}
-                  </g>
-                ))}
-              </svg>
+            <div className="relative aspect-square w-full overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0a0f1f] via-[#0b1226] to-[#070b1a] p-6">
+              {/* ambient gradient blobs */}
+              <div className="pointer-events-none absolute -left-10 -top-10 h-56 w-56 rounded-full bg-blue-500/15 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-10 -right-10 h-56 w-56 rounded-full bg-fuchsia-500/10 blur-3xl" />
+              <div className="pointer-events-none absolute inset-0 grid-bg opacity-[0.07]" />
+
+              {(() => {
+                const center = { x: 50, y: 50 };
+                const peers = [
+                  { x: 22, y: 18, name: "Aarav K.",    role: "Distributed Systems", img: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=160&h=160&fit=crop&crop=faces" },
+                  { x: 80, y: 16, name: "Priya R.",    role: "ML Infra",            img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=160&h=160&fit=crop&crop=faces" },
+                  { x: 86, y: 62, name: "Diego M.",    role: "Rust / Low-latency",  img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=160&h=160&fit=crop&crop=faces" },
+                  { x: 18, y: 74, name: "Lin W.",      role: "Kubernetes",          img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=160&h=160&fit=crop&crop=faces" },
+                  { x: 52, y: 88, name: "Marcus O.",   role: "Security",            img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&h=160&fit=crop&crop=faces" },
+                  { x: 14, y: 44, name: "Sana I.",     role: "GraphQL / DX",        img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&h=160&fit=crop&crop=faces" },
+                ];
+                return (
+                  <>
+                    {/* connection lines (SVG overlay in % coordinates) */}
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
+                      <defs>
+                        <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.6" />
+                          <stop offset="100%" stopColor="#a78bfa" stopOpacity="0.15" />
+                        </linearGradient>
+                      </defs>
+                      {peers.map((p, i) => (
+                        <line key={i} x1={center.x} y1={center.y} x2={p.x} y2={p.y}
+                          stroke="url(#lineGrad)" strokeWidth="0.25"
+                          strokeDasharray="0.8 0.8" className="animate-dash-flow" />
+                      ))}
+                      {/* a few peer-to-peer links */}
+                      <line x1={peers[0].x} y1={peers[0].y} x2={peers[1].x} y2={peers[1].y} stroke="rgba(255,255,255,0.08)" strokeWidth="0.18" strokeDasharray="0.6 0.8" />
+                      <line x1={peers[2].x} y1={peers[2].y} x2={peers[4].x} y2={peers[4].y} stroke="rgba(255,255,255,0.08)" strokeWidth="0.18" strokeDasharray="0.6 0.8" />
+                      <line x1={peers[3].x} y1={peers[3].y} x2={peers[5].x} y2={peers[5].y} stroke="rgba(255,255,255,0.08)" strokeWidth="0.18" strokeDasharray="0.6 0.8" />
+                    </svg>
+
+                    {/* center "You" node */}
+                    <div className="absolute z-10" style={{ left: `${center.x}%`, top: `${center.y}%`, transform: "translate(-50%, -50%)" }}>
+                      <div className="relative">
+                        <span className="absolute inset-0 -m-3 rounded-full bg-blue-500/25 blur-xl" />
+                        <span className="absolute inset-0 -m-1 rounded-full bg-gradient-to-br from-blue-400/60 via-indigo-500/40 to-fuchsia-500/40 animate-pulse-ring" />
+                        <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 ring-2 ring-white/30 shadow-[0_8px_30px_-8px_rgba(99,102,241,0.6)]">
+                          <span className="text-sm font-semibold tracking-tight text-white">You</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* peer engineer cards */}
+                    {peers.map((p, i) => (
+                      <motion.div
+                        key={p.name}
+                        initial={{ opacity: 0, scale: 0.6 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.15 + i * 0.08, duration: 0.5, ease: "easeOut" }}
+                        className="absolute z-10 group"
+                        style={{ left: `${p.x}%`, top: `${p.y}%`, transform: "translate(-50%, -50%)" }}
+                      >
+                        <div className="relative">
+                          <span className="absolute inset-0 -m-2 rounded-full bg-gradient-to-br from-blue-400/30 to-fuchsia-400/20 blur-md opacity-70 group-hover:opacity-100 transition-opacity" />
+                          <img
+                            src={p.img}
+                            alt={p.name}
+                            loading="lazy"
+                            className="relative h-12 w-12 rounded-full object-cover ring-2 ring-white/20 shadow-lg shadow-black/40"
+                          />
+                          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 ring-2 ring-[#0a0f1f]" />
+                        </div>
+                        <div className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-white/10 bg-black/60 px-2 py-1 text-[10px] text-white/85 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="font-medium">{p.name}</span>
+                          <span className="text-white/50"> · {p.role}</span>
+                        </div>
+                      </motion.div>
+                    ))}
+
+                    {/* corner caption */}
+                    <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-white/40">
+                      <span>Live network</span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        6 engineers near you
+                      </span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </motion.div>
         </div>
