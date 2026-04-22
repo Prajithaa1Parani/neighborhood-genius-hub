@@ -1,139 +1,117 @@
-# 🧠 DSA Concepts in The Exchange — Engineering Skill Network
+# Hyperlocal Skill Exchange Platform — DSA Documentation
 
-> **For your viva:** every algorithm below is *actually wired up* and powers a real feature in the app — it's not dead code. Files & line numbers are exact.
+## Data Structures Used
 
----
+### 1. Trie *(for Skill Search with Autocomplete)*
 
-## Quick Reference Table
+**Where it is used:** Skill Market search bar — "Search (try a typo: kuburnetes)..."
 
-| # | Algorithm / DS | File | Powers | Time | Space |
-|---|---|---|---|---|---|
-| 1 | **Trie (Prefix Tree)** | `src/lib/dsa/trie.ts` | Market search prefix lookup | Insert `O(L)`, Search `O(L+k)` | `O(N·L)` |
-| 2 | **Levenshtein Distance (DP)** | `src/lib/dsa/fuzzySearch.ts` | Typo-tolerant search | `O(m·n)` | `O(min(m,n))` |
-| 3 | **Quicksort (Divide & Conquer)** | `src/lib/dsa/quickSort.ts` | Sort by rating / price / distance | Avg `O(n log n)` | `O(log n)` |
-| 4 | **Binary Search (lower/upper bound)** | `src/lib/dsa/binarySearch.ts` | Price-range filter on sorted array | `O(log n)` | `O(1)` |
-| 5 | **Min-Heap / Priority Queue** | `src/lib/dsa/priorityQueue.ts` | Notification ordering | push/pop `O(log n)` | `O(n)` |
-| 6 | **LRU Cache (HashMap + ordered Map)** | `src/lib/dsa/lru.ts` | Cache last 5 mentor profiles | get/put `O(1)` | `O(capacity)` |
-| 7 | **Graph + BFS** | `src/lib/dsa/graph.ts` | "Recommended for you" on Dashboard | `O(V+E)` | `O(V)` |
-| 8 | **Debouncing (timer queue)** | `src/lib/dsa/debounce.ts` | Search input throttling | `O(1)` per call | `O(1)` |
-| 9 | **Hash Map** (`Record<string, ChatMessage[]>`) | `src/routes/chat.tsx` | O(1) message lookup by convoId | `O(1)` avg | `O(n)` |
-| 10 | **Queue (FIFO)** | `src/routes/chat.tsx` | Chronological message append | enqueue `O(1)` | `O(n)` |
-| 11 | **Buffered Stream Parsing** | `src/routes/chat.tsx` | SSE chunk → line decoding | `O(n)` per byte | `O(buffer)` |
-| 12 | **State Machine (FSM)** | `src/lib/auth-context.tsx`, `src/routes/chat.tsx` | Auth states, typing states | `O(1)` per transition | `O(1)` |
+**What it does:**
+- Stores all skill names character by character in a tree
+- Each node = one letter
+- Skills sharing the same starting letters share the same path
+- Enables fast autocomplete and typo-tolerant search
 
----
+**How it works (simple explanation):**
+- When user types "Rea", the Trie traverses R → e → a and returns all skills starting with "Rea" like "React", "React Native"
+- For typos like "kuburnetes", Levenshtein distance checks how many letter changes are needed and still returns "kubernetes"
 
-## 1. Trie (Prefix Tree) — `src/lib/dsa/trie.ts`
+**Time Complexity:**
+- Insert a skill: O(m) where m = length of skill name
+- Search a skill: O(m)
+- Much faster than checking every skill one by one (which would be O(n))
 
-**Where it's used:** `src/routes/market.tsx` lines ~57-64 build the Trie from every skill title + tag, then `searchPrefix(tok)` returns matching skill IDs in `O(L)`.
-
-**Talking points**
-- Each node stores a `Map<char, TrieNode>` plus a `Set<id>` of all skill IDs that pass through it — so prefix lookup also returns *which* skills match, not just whether anything matches.
-- Multi-token queries are handled by **set intersection** of per-token results.
+**Why Trie and not simple array search?**
+- Array search would check every skill name from start to finish — O(n)
+- Trie goes directly to matching prefix — O(m), independent of how many skills exist
 
 ---
 
-## 2. Levenshtein Distance (Dynamic Programming) — `src/lib/dsa/fuzzySearch.ts`
+### 2. Array *(for storing Skill Listings)*
 
-**Where it's used:** Market search falls back to fuzzy match when the Trie returns nothing — `fuzzyMatch(hay, q, 2)` allows up to 2 edits, so typing `kuburnetes` still surfaces the Kubernetes course.
+**Where it is used:** Skill Market — the list of 12 skills shown on screen
 
-**Talking points**
-- Classic edit-distance DP recurrence: `dp[i][j] = min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost)`
-- We use the **rolling-row optimization** → space drops from `O(m·n)` to `O(min(m,n))`.
-- Sliding-window scan over `text` lets us match a small typo'd query inside a long description.
+**What it does:**
+- All skill posts are stored in an ordered array
+- Quicksort is applied on this array to sort by Best Match, Price, Rating
 
----
+**How it works:**
+- Each element in the array is one skill listing (title, price, level, category)
+- When user selects "Best Match" or price filter, Quicksort runs on this array
 
-## 3. Quicksort — `src/lib/dsa/quickSort.ts`
+**Time Complexity:**
+- Access by index: O(1)
+- Quicksort (sorting): O(n log n) average
 
-**Where it's used:** Market `Sort by` dropdown (rating / price asc / price desc / distance) at `src/routes/market.tsx` lines ~107-120.
-
-**Talking points**
-- Lomuto partition, recursive divide & conquer.
-- Comparator passed in → reusable across keys.
-- We avoid mutating input by cloning first (functional safety).
-
----
-
-## 4. Binary Search + Range Query — `src/lib/dsa/binarySearch.ts`
-
-**Where it's used:** Market price filter — `rangeQuery(skillsSortedByPrice, 0, maxPrice)` returns the slice in `O(log n + k)` instead of scanning all skills.
-
-**Talking points**
-- `lowerBound` and `upperBound` mirror C++ STL semantics.
-- Pre-sorting once via quicksort (memoized) lets every subsequent filter be logarithmic.
+**Why Quicksort?**
+- Bubble sort is O(n²) — too slow
+- Quicksort is fast and works well in practice for sorting listings
 
 ---
 
-## 5. Min-Heap / Priority Queue — `src/lib/dsa/priorityQueue.ts`
+### 3. HashMap *(for User Profiles and Skill Posts)*
 
-**Where it's used:** Notifications in the top bar — `src/components/AppLayout.tsx` lines ~62-76. Each notification gets a score = `priority*100 + recency + readPenalty`; the heap drains the **most urgent unread** first.
+**Where it is used:**
+- Storing user data (Prajithaa's profile, 47 skills exchanged, 132 hours, 4.92 rating)
+- Storing each user's own posts (My Posts page — "Intro to System Design")
+- Exchange Requests — quickly finding who sent the request (Aarav Kumar → his profile)
 
-**Talking points**
-- Array-backed binary heap, parent at `(i-1)>>1`, children at `2i+1` / `2i+2`.
-- `bubbleUp` after push, `sinkDown` after pop — both `O(log n)`.
+**What it does:**
+- Key = User ID or Skill ID
+- Value = all data about that user or skill
+- Gives instant lookup without looping through everyone
 
----
+**How it works:**
+- To find Prajithaa's profile: HashMap.get("user_prajithaa") → instant result
+- To find a skill by ID: HashMap.get("skill_001") → returns title, description, price
 
-## 6. LRU Cache — `src/lib/dsa/lru.ts`
-
-**Where it's used:** `src/routes/mentor.$mentorId.tsx` — the route loader caches the last 5 viewed profiles. Re-opening one is `O(1)`.
-
-**Talking points**
-- Implemented via JavaScript `Map`, which preserves insertion order. Re-inserting an existing key (delete → set) moves it to "most recently used".
-- When size > capacity, evict the first key returned by `keys().next()` — that's the LRU entry.
-
----
-
-## 7. Graph + BFS — `src/lib/dsa/graph.ts`
-
-**Where it's used:** Dashboard "Recommended for you" — `src/routes/dashboard.tsx` lines ~46-72.
-- Build bipartite graph: `skill:<title>` ↔ `mentor:<id>`, plus `tag` ↔ `skill` edges.
-- Run **multi-source BFS** from tokens of `user.skillsNeeded`.
-- Mentors connected by the **shortest path** rank highest → most relevant.
-
-**Talking points**
-- Adjacency list via `Map<N, Set<N>>`.
-- Iterative BFS using a head index instead of `Array.shift()` (which is `O(n)`) → keeps the algorithm true `O(V+E)`.
+**Time Complexity:**
+- Insert: O(1)
+- Lookup: O(1)
+- Much faster than array search O(n)
 
 ---
 
-## 8. Debounce — `src/lib/dsa/debounce.ts`
+## How All Three Work Together (Full Flow Example)
 
-**Where it's used:** `useDebouncedValue(search, 200)` in `src/routes/market.tsx`. Limits Trie + fuzzy recompute to **once per 200 ms** of typing — same idea Google uses for its search box.
+> User opens Skill Market and types "reac" in the search bar
 
----
-
-## 9-12. Other Concepts in the Codebase
-
-- **Hash Map:** `chatMessages: Record<string, ChatMessage[]>` — O(1) message-list lookup.
-- **Queue (FIFO):** chat thread always appends new messages to the end and renders front-to-back.
-- **Buffered Stream Parsing:** the SSE reader in `src/routes/chat.tsx` decodes a `Uint8Array` byte-stream into `\n`-delimited JSON events using a rolling buffer.
-- **Finite State Machine:** auth has `{UNAUTHENTICATED, AUTHENTICATED}` and chat has `{IDLE, TYPING}`.
+1. **Trie** → finds all skills starting with "reac" → returns ["React", "React Native", "Advanced React & TypeScript"]
+2. **Array** → holds all matched skill listings
+3. **Quicksort on Array** → sorts results by Best Match or price
+4. **HashMap** → fetches full details of each skill (description, poster info, price) instantly
 
 ---
 
-## How to Demonstrate to Sir
+## Summary Table
 
-1. Open **Market** → type `kuburnetes` → fuzzy match finds Kubernetes (Levenshtein DP).
-2. Type `react` → results appear after 200 ms (debounce + Trie prefix).
-3. Change "Sort by" → Quicksort re-orders.
-4. Pick "≤ ₹500/hr" → Binary-search range query slices the sorted array.
-5. Open **Dashboard** → "Recommended for you" → BFS over skill-similarity graph.
-6. Open **bell icon** → most-urgent unread first → priority-queue ordering.
-7. Open a **mentor profile**, navigate away, come back → instant load = LRU cache hit.
-
-All algorithms live under `src/lib/dsa/` and each file's header comment documents its DSA, complexity, and where it's used.
+| Data Structure | Where Used | Why Used | Time Complexity |
+|---|---|---|---|
+| Trie | Search bar in Skill Market | Fast prefix search + typo tolerance | O(m) search |
+| Array | Skill listings in Market | Store and sort all skills | O(n log n) with Quicksort |
+| HashMap | User profiles, My Posts, Requests | Instant lookup by ID | O(1) lookup |
 
 ---
 
-## Update — My Posts & History pages
+## Likely Viva Questions & Answers
 
-| DSA | File | Lines | Real-world purpose |
-|-----|------|-------|--------------------|
-| **Quicksort** (`quickSort.ts`) | `src/routes/my-posts.tsx` | ~44-52 | Sort the user's own posts by newest, most-viewed, or most-requested. O(n log n) avg. |
-| **Quicksort** (`quickSort.ts`) | `src/routes/history.tsx` | ~58-61 | Order session history by date descending for chronological grouping. |
-| **Priority Queue / Min-Heap** (`priorityQueue.ts`) | `src/routes/history.tsx` | ~48-56 | Surface "needs review" sessions first. Sessions awaiting review are pushed with score 0; reviewed ones get +1000 plus a recency component, so unreviewed always rises to the top. |
+**Q: What is a Trie?**
+A: A tree where each node stores one character. Words sharing the same prefix share the same path. Used for fast search and autocomplete.
 
-### Cross-account testing
-Two demo accounts (`Prajithaa` / `Aarav`) demonstrate that posts made by user A only appear in user B's Market view, never their own. This is enforced in `src/routes/market.tsx` by filtering `s.postedBy !== user.id`.
+**Q: Why did you use Trie for search?**
+A: Because users may type partial skill names or typos. Trie handles both efficiently in O(m) time.
+
+**Q: What is Levenshtein distance?**
+A: It counts the minimum number of insertions, deletions, or replacements needed to turn one word into another. I used it with Trie to handle typos in search.
+
+**Q: Why Array for skill listings?**
+A: Arrays allow index-based access and are easy to sort. I applied Quicksort on the array to sort skills by price or match score.
+
+**Q: Why HashMap for users?**
+A: HashMap gives O(1) lookup. I can fetch any user's profile or skill post instantly using their ID as the key.
+
+**Q: What is the time complexity of Quicksort?**
+A: O(n log n) average case. Worst case is O(n²) but that rarely happens with good pivot selection.
+
+**Q: What is the difference between Array search and HashMap search?**
+A: Array search is O(n) — you check each element. HashMap search is O(1) — direct access using the key.
