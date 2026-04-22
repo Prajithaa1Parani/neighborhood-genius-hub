@@ -93,25 +93,3 @@
 
 ---
 
-## Likely Viva Questions & Answers
-
-**Q: What is a Trie?**
-A: A tree where each node stores one character. Words sharing the same prefix share the same path. Used for fast search and autocomplete.
-
-**Q: Why did you use Trie for search?**
-A: Because users may type partial skill names or typos. Trie handles both efficiently in O(m) time.
-
-**Q: What is Levenshtein distance?**
-A: It counts the minimum number of insertions, deletions, or replacements needed to turn one word into another. I used it with Trie to handle typos in search.
-
-**Q: Why Array for skill listings?**
-A: Arrays allow index-based access and are easy to sort. I applied Quicksort on the array to sort skills by price or match score.
-
-**Q: Why HashMap for users?**
-A: HashMap gives O(1) lookup. I can fetch any user's profile or skill post instantly using their ID as the key.
-
-**Q: What is the time complexity of Quicksort?**
-A: O(n log n) average case. Worst case is O(n²) but that rarely happens with good pivot selection.
-
-**Q: What is the difference between Array search and HashMap search?**
-A: Array search is O(n) — you check each element. HashMap search is O(1) — direct access using the key.
